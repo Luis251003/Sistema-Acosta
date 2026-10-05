@@ -1,0 +1,6 @@
+--V1__USUARIOS
+
+--INSERTAMOS REGISTRO DE ROLES
+INSERT INTO tb_roles(nombre) VALUES ('ADMIN') ON DUPLICATE KEY UPDATE nombre = nombre;;
+INSERT INTO tb_roles(nombre) VALUES ('OPERADOR') ON DUPLICATE KEY UPDATE nombre = nombre;;
+INSERT INTO tb_roles(nombre) VALUES ('CONDUCTOR') ON DUPLICATE KEY UPDATE nombre = nombre;;
