@@ -2,6 +2,7 @@ package com.upc.acosta.app.exception;
 
 import com.upc.acosta.app.error.EmailExistException;
 import com.upc.acosta.app.error.NotFoundException;
+import com.upc.acosta.app.error.ValidAuthenticationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -16,7 +17,7 @@ public class GlobalExceptionHandler {
 
     //Manejamos la excepcion de validacion binding
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> ValidException(MethodArgumentNotValidException ex){
+    public ResponseEntity<?> MethodArgumentNotValidException(MethodArgumentNotValidException ex){
         Map<String,String> errores = new HashMap<>();
         ex.getBindingResult()
                 .getFieldErrors()

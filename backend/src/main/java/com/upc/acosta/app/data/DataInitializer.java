@@ -13,11 +13,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 public class DataInitializer {
 
+    private final IUsuarioRepository usuarioRepository;
+    private final IRolRepository rolRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public DataInitializer(IUsuarioRepository usuarioRepository, IRolRepository rolRepository, PasswordEncoder passwordEncoder) {
+        this.usuarioRepository = usuarioRepository;
+        this.rolRepository = rolRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
     @Bean
     CommandLineRunner initData(
-            IUsuarioRepository usuarioRepository,
-            IRolRepository rolRepository,
-            PasswordEncoder passwordEncoder
     ){
         return args -> {
             // Buscar roles
@@ -39,21 +46,31 @@ public class DataInitializer {
                     );
             // Crear usuarios iniciales
             crearUsuario(
-                    usuarioRepository,
-                    passwordEncoder,
                     "luisortiz251003@gmail.com",
                     "Admin123¡",
-                    rolAdmin
+                    rolAdmin,
+                    true
+            );
+            crearUsuario(
+                    "bryanguerraperales412@gmail.com",
+                    "Admin123¡",
+                    rolAdmin,
+                    true
+            );
+            crearUsuario(
+                    "usuario.bloqueado@empresa.com",
+                    "Password123",
+                    rolAdmin,
+                    false
             );
         };
     }
 
     private void crearUsuario(
-            IUsuarioRepository usuarioRepository,
-            PasswordEncoder passwordEncoder,
             String email,
             String password,
-            Rol rol
+            Rol rol,
+            boolean activo
     ) {
         //Validamos que el correo no este registrado
         if (usuarioRepository.findByEmail(email).isEmpty()) {
@@ -65,6 +82,7 @@ public class DataInitializer {
             usuario.setEmail(email);
             usuario.setPassword(passwordEncoder.encode(password));
             usuario.agregarRol(rol);
+            usuario.setActivo(activo);
 
             //Regisramos
             usuarioRepository.save(usuario);

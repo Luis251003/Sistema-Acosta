@@ -33,7 +33,7 @@ public class UserDetailsServiceJPA implements UserDetailsService {
         List<GrantedAuthority> authorities = user
                 .getRoles()
                 .stream()
-                .map(rol -> new SimpleGrantedAuthority(rol.getNombre()))
+                .map(rol -> new SimpleGrantedAuthority("ROLE_" + rol.getNombre()))
                 .collect(Collectors.toList());
         return new User(
                 user.getEmail(),
