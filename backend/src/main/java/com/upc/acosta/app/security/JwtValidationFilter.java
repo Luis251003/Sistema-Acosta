@@ -15,13 +15,19 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import tools.jackson.databind.ObjectMapper;
 
+import javax.crypto.SecretKey;
+
 import static com.upc.acosta.app.security.TokenJwtConfig.*;
 import java.io.IOException;
 import java.util.*;
 
 public class JwtValidationFilter extends BasicAuthenticationFilter {
-    public JwtValidationFilter(AuthenticationManager authenticationManager) {
+
+    private final long jwtExpiration;
+
+    public JwtValidationFilter(AuthenticationManager authenticationManager, long jwtExpiration) {
         super(authenticationManager);
+        this.jwtExpiration = jwtExpiration;
     }
 
     @Override
@@ -44,6 +50,16 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
 
             UsernamePasswordAuthenticationToken authenticationToken= new UsernamePasswordAuthenticationToken(email,null,authorities);
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+
+            //4. Renovar TOKEN si esta proximo a expirar
+            Date expiration = claims.getExpiration();
+            long tiempoRestante = expiration.getTime() - System.currentTimeMillis();
+            long tiempoRenovacion = 15 * 60 * 1000L;
+
+            if(tiempoRestante <= tiempoRenovacion){
+                String nuevoToken = generarToken(email,authorities);
+                response.setHeader(HEADER_AUTHORIZATION,PREFIX_TOKEN + nuevoToken);
+            }
             chain.doFilter(request,response);
         }catch (JwtException e){
             Map<String,String> body = new HashMap<>();
@@ -54,7 +70,18 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
             response.setStatus(401);
             response.setContentType(CONTENT_TYPE);
         }
-
-
+    }
+    private String generarToken(String email,Collection<? extends GrantedAuthority> roles){
+        //Generamos el token
+        return Jwts
+                .builder()
+                .subject(email)
+                .claim("authorities", roles.stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .toList())
+                .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .issuedAt(new Date())
+                .signWith(SECRET_KEY)
+                .compact();
     }
 }

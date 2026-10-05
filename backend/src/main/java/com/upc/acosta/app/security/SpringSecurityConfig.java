@@ -44,7 +44,7 @@ public class SpringSecurityConfig {
     SecurityFilterChain filterChain(HttpSecurity httpSecurity){
         return httpSecurity
         .addFilter(new JwtAuthenticationFilter(authenticationConfiguration.getAuthenticationManager(),jwtExpiration))
-        .addFilter(new JwtValidationFilter(authenticationConfiguration.getAuthenticationManager()))
+        .addFilter(new JwtValidationFilter(authenticationConfiguration.getAuthenticationManager(),jwtExpiration))
         .csrf(AbstractHttpConfigurer::disable)
         .cors(cors->cors.configurationSource(corsConfigurationSource()))
         .authorizeHttpRequests((auth)->auth.requestMatchers("/api/usuario/**").authenticated())
