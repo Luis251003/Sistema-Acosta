@@ -1,7 +1,6 @@
 package com.upc.acosta.app.service;
 
 import com.upc.acosta.app.entity.Usuario;
-import com.upc.acosta.app.error.EmailExistException;
 import com.upc.acosta.app.repository.IUsuarioRepository;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

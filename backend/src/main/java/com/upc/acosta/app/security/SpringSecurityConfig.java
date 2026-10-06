@@ -14,6 +14,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -29,6 +30,11 @@ public class SpringSecurityConfig {
 
     @Value("${jwt.expiration}")
     private long jwtExpiration;
+
+    @Bean
+    public RestClient.Builder restClientBuilder() {
+        return RestClient.builder();
+    }
 
     @Bean
     AuthenticationManager authenticationManager(){
@@ -47,7 +53,17 @@ public class SpringSecurityConfig {
         .addFilter(new JwtValidationFilter(authenticationConfiguration.getAuthenticationManager(),jwtExpiration))
         .csrf(AbstractHttpConfigurer::disable)
         .cors(cors->cors.configurationSource(corsConfigurationSource()))
-        .authorizeHttpRequests((auth)->auth.requestMatchers("/api/usuario/**").authenticated())
+        .authorizeHttpRequests((auth)->auth
+                // Solo ADMIN y OPERADOR
+                .requestMatchers("/api/usuario/**")
+                .hasAnyRole("ADMIN", "OPERADOR")
+
+                .requestMatchers("/api/cliente/**")
+                .hasAnyRole("ADMIN", "OPERADOR")
+
+                .anyRequest()
+                .authenticated()
+        )
         .sessionManagement(management->management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .build();
     }
