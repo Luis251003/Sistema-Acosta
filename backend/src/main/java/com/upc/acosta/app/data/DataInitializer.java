@@ -63,6 +63,12 @@ public class DataInitializer {
                     rolAdmin,
                     false
             );
+            crearUsuario(
+                    "usuario.conductor@empresa.com",
+                    "Password123",
+                    rolConductor,
+                    true
+            );
         };
     }
 
