@@ -2,6 +2,7 @@ package com.upc.acosta.app.controller;
 
 import com.upc.acosta.app.dto.ClienteDTORequest;
 import com.upc.acosta.app.dto.ClienteDTOResponse;
+import com.upc.acosta.app.dto.ClienteUpdateDTORequest;
 import com.upc.acosta.app.dto.RucDTOResponse;
 import com.upc.acosta.app.service.ConsultaRUCService;
 import com.upc.acosta.app.service.IClienteService;
@@ -49,7 +50,7 @@ public class ClienteController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> actualizar(@PathVariable long id, @Valid @RequestBody ClienteDTORequest bean){
+    public ResponseEntity<?> actualizar(@PathVariable long id, @Valid @RequestBody ClienteUpdateDTORequest bean){
         ClienteDTOResponse cliente = clienteService.editar(id,bean);
         return ResponseEntity.status(HttpStatus.CREATED).body(cliente);
     }
