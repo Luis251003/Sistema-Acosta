@@ -4,6 +4,7 @@ import com.upc.acosta.app.dto.ConductorDTORequest;
 import com.upc.acosta.app.dto.ConductorDTOResponse;
 import com.upc.acosta.app.entity.Conductor;
 import com.upc.acosta.app.entity.Persona;
+import com.upc.acosta.app.entity.TipoConductor;
 import com.upc.acosta.app.error.BadRequestException;
 import com.upc.acosta.app.error.DataExistException;
 import com.upc.acosta.app.error.NotFoundException;
@@ -28,7 +29,11 @@ public class ConductorService implements IConductorService{
     private IArchivoService archivoService;
 
     //METODO CONSTRUCTOR
-    public ConductorService(IConductorRepository conductorRepository, IPersonaRepository personaRepository, IArchivoService archivoService) {
+    public ConductorService(
+            IConductorRepository conductorRepository,
+            IPersonaRepository personaRepository,
+            IArchivoService archivoService
+    ) {
         this.conductorRepository = conductorRepository;
         this.personaRepository = personaRepository;
         this.archivoService = archivoService;
@@ -47,7 +52,8 @@ public class ConductorService implements IConductorService{
                 persona.getTelefono(),
                 persona.getDni(),
                 bean.getBrevete(),
-                bean.getFotoUrl()
+                bean.getFotoUrl(),
+                bean.getTipoConductor()
         );
     }
 
@@ -81,7 +87,7 @@ public class ConductorService implements IConductorService{
         //REGISTRAR PERSONA
         Persona persona = personaRepository.save(new Persona(bean.nombre(),bean.apellido(),bean.telefono(),bean.dni()));
         //CREAR CONDUCTOR
-        Conductor conductor = new Conductor(persona,bean.brevete());
+        Conductor conductor = new Conductor(persona, bean.brevete(), bean.tipoConductor());
 
         return entityToResponse(conductorRepository.save(conductor));
     }
@@ -115,6 +121,7 @@ public class ConductorService implements IConductorService{
         //ACTUALIZAMOS LOS DATOS DE CONDUCTOR
         conductor.setPersona(persona);
         conductor.setBrevete(bean.brevete());
+        conductor.setTipoConductor(bean.tipoConductor());
         return entityToResponse(conductorRepository.save(conductor));
     }
 

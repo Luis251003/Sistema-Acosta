@@ -1,6 +1,8 @@
 package com.upc.acosta.app.dto;
 
+import com.upc.acosta.app.entity.TipoConductor;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
@@ -28,6 +30,8 @@ public record ConductorDTORequest (
                 regexp = "^[A-Z0-9]{8,10}$",
                 message = "El brevete debe contener entre 8 y 10 caracteres alfanuméricos"
         )
-        String brevete
+        String brevete,
+        @NotNull(message = "El tipo de conductor es obligatorio")
+        TipoConductor tipoConductor
 ){
 }

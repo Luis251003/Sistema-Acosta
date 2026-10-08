@@ -50,6 +50,11 @@ public class Persona {
         this.updatedAt = LocalDateTime.now();
     }
 
+    @PreUpdate
+    private void configurarAntesDeActualizar() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;

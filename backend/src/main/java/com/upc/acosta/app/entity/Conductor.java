@@ -24,6 +24,10 @@ public class Conductor {
     @Column(name = "foto_url", length = 500)
     private String fotoUrl;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_conductor", nullable = false, length = 20)
+    private TipoConductor tipoConductor;
+
     @Column(nullable = false)
     private Boolean activo = true;
 
@@ -37,15 +41,21 @@ public class Conductor {
     @JoinColumn(name = "id_persona", nullable = false,unique = true)
     private Persona persona;
 
-    public Conductor(Persona persona,String brevete){
+    public Conductor(Persona persona, String brevete, TipoConductor tipoConductor) {
         this.persona = persona;
         this.brevete = brevete;
+        this.tipoConductor = tipoConductor;
     }
 
     //METODO PARA CONFIGURAR LOS VALORES ANTES DE PERSISTIR
     @PrePersist
     private void configurar(){
         this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    private void configurarAntesDeActualizar() {
         this.updatedAt = LocalDateTime.now();
     }
 

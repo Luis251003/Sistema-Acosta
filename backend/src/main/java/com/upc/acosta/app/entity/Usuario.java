@@ -51,6 +51,11 @@ public class Usuario {
         this.updatedAt = LocalDateTime.now();
     }
 
+    @PreUpdate
+    private void configurarAntesDeActualizar() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
     //METODOS DE AYUDA PARA AGREGAR ROL
     public void agregarRol(Rol rol){
         roles.add(rol);
