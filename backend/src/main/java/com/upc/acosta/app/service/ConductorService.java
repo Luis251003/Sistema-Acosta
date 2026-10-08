@@ -4,7 +4,6 @@ import com.upc.acosta.app.dto.ConductorDTORequest;
 import com.upc.acosta.app.dto.ConductorDTOResponse;
 import com.upc.acosta.app.entity.Conductor;
 import com.upc.acosta.app.entity.Persona;
-import com.upc.acosta.app.entity.TipoConductor;
 import com.upc.acosta.app.error.BadRequestException;
 import com.upc.acosta.app.error.DataExistException;
 import com.upc.acosta.app.error.NotFoundException;
@@ -62,6 +61,7 @@ public class ConductorService implements IConductorService{
     public List<ConductorDTOResponse> listar() {
         return conductorRepository.findAll()
                 .stream()
+                .filter((x)->x.getActivo()==true)
                 .map(this::entityToResponse)
                 .collect(Collectors.toList());
     }
