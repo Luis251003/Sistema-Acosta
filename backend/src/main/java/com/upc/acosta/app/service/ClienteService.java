@@ -2,9 +2,11 @@ package com.upc.acosta.app.service;
 
 import com.upc.acosta.app.dto.ClienteDTORequest;
 import com.upc.acosta.app.dto.ClienteDTOResponse;
+import com.upc.acosta.app.dto.ClienteUpdateDTORequest;
 import com.upc.acosta.app.entity.Cliente;
 import com.upc.acosta.app.entity.CondicionCliente;
 import com.upc.acosta.app.entity.EstadoCliente;
+import com.upc.acosta.app.error.BadRequestException;
 import com.upc.acosta.app.error.DataExistException;
 import com.upc.acosta.app.error.NotFoundException;
 import com.upc.acosta.app.repository.IClienteRepository;
@@ -85,7 +87,7 @@ public class ClienteService implements IClienteService{
         }
         //VALIDAMOS QUE EL RUC SEA VALIDO
         if (!RucValidator.validar(cliente.ruc())) {
-            throw new ValidationException("El RUC ingresado no es válido");
+            throw new BadRequestException("El RUC ingresado no es válido");
         }
 
         return entityToResponse(clienteRepository.save(requestToEntity(cliente)));
@@ -93,7 +95,7 @@ public class ClienteService implements IClienteService{
 
     @Override
     @Transactional
-    public ClienteDTOResponse editar(long id, ClienteDTORequest bean) {
+    public ClienteDTOResponse editar(long id, ClienteUpdateDTORequest bean) {
         //VALIDACIONES
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(()->new NotFoundException("Cliente con ID: " + id + " no fue encontrado"));

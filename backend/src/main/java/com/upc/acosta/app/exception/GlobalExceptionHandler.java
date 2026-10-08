@@ -3,7 +3,6 @@ package com.upc.acosta.app.exception;
 import com.upc.acosta.app.error.BadRequestException;
 import com.upc.acosta.app.error.DataExistException;
 import com.upc.acosta.app.error.NotFoundException;
-import jakarta.validation.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -29,14 +28,6 @@ public class GlobalExceptionHandler {
                         )
                 );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errores);
-    }
-
-    @ExceptionHandler(ValidationException.class)
-    public ResponseEntity<?> ValidationException(ValidationException exc){
-        Map<String,String> error = new HashMap<>();
-        error.put("error","Error de validación");
-        error.put("message",exc.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     @ExceptionHandler(BadRequestException.class)

@@ -19,9 +19,9 @@ public record ClienteDTORequest (
         )
         String razonSocial,
         @NotNull(message = "El estado es obligatorio")
-        long id_estado,
+        Long id_estado,
         @NotNull(message = "La condición es obligatoria")
-        long id_condicion,
+        Long id_condicion,
         @NotBlank(message = "La dirección es obligatoria")
         @Size(
                 max = 300,
