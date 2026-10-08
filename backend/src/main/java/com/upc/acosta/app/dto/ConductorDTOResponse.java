@@ -1,5 +1,7 @@
 package com.upc.acosta.app.dto;
 
+import com.upc.acosta.app.entity.TipoConductor;
+
 public record ConductorDTOResponse(
         Long id,
         String nombre,
@@ -7,6 +9,7 @@ public record ConductorDTOResponse(
         String telefono,
         String dni,
         String brevete,
-        String fotoUrl
+        String fotoUrl,
+        TipoConductor tipoConductor
 ) {
 }
