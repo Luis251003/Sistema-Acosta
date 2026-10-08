@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
         Map<String,String> error = new HashMap<>();
         error.put("error","Error en el ingreso de datos");
         error.put("message",exc.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     //Manejamos los datos no encontrados
@@ -51,8 +51,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataExistException.class)
     public ResponseEntity<?> EmailExistException(DataExistException exc){
         Map<String,String> error = new HashMap<>();
-        error.put("error","Error de dato encontrado");
+        error.put("error","Error de conflicto de datos");
         error.put("message",exc.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 }
