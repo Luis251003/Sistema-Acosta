@@ -9,6 +9,7 @@ import java.util.List;
 public interface IClienteService {
 
     List<ClienteDTOResponse> listar();
+    ClienteDTOResponse buscarXId(Long id);
     ClienteDTOResponse registrar(ClienteDTORequest cliente);
     ClienteDTOResponse editar(long id, ClienteUpdateDTORequest cliente);
     void eliminar(long id);
