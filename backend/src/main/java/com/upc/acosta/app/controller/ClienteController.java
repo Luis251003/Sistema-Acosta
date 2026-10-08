@@ -36,6 +36,12 @@ public class ClienteController {
         return ResponseEntity.ok(clientes);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<?> buscarXId(@PathVariable Long id){
+        ClienteDTOResponse cliente = clienteService.buscarXId(id);
+        return ResponseEntity.ok(cliente);
+    }
+
     @GetMapping("/buscar/{texto}")
     public ResponseEntity<?> buscar(@PathVariable String texto){
         List<ClienteDTOResponse> clientes = clienteService.buscarXRazonSocialORuc(texto);

@@ -70,6 +70,12 @@ public class ClienteService implements IClienteService{
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public ClienteDTOResponse buscarXId(Long id) {
+        return clienteRepository.findById(id).map(this::entityToResponse).orElseThrow(()->new NotFoundException("Error al encontrar el cliente"));
+    }
+
+    @Override
     @Transactional
     public ClienteDTOResponse registrar(ClienteDTORequest cliente) {
 
