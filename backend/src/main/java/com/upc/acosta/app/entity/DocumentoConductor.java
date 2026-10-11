@@ -80,7 +80,16 @@ public class DocumentoConductor {
     }
 
     public String obtenerEstadoActual() {
-        return fechaVencimiento.isBefore(LocalDate.now()) ? "VENCIDO" : "VIGENTE";
+        LocalDate hoy = LocalDate.now();
+        LocalDate umbralPorVencer = hoy.plusMonths(1);
+
+        if (fechaVencimiento.isBefore(hoy)) {
+            return "VENCIDO";
+        }
+        if (!fechaVencimiento.isAfter(umbralPorVencer)) {
+            return "POR VENCER";
+        }
+        return "VIGENTE";
     }
 
     private void actualizarEstado() {

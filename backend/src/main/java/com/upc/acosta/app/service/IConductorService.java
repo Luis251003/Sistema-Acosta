@@ -2,7 +2,6 @@ package com.upc.acosta.app.service;
 
 import com.upc.acosta.app.dto.ConductorDTORequest;
 import com.upc.acosta.app.dto.ConductorDTOResponse;
-import com.upc.acosta.app.entity.Conductor;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;

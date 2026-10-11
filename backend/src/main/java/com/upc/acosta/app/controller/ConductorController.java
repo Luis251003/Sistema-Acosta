@@ -1,9 +1,6 @@
 package com.upc.acosta.app.controller;
 
-import com.upc.acosta.app.dto.ConductorDTORequest;
-import com.upc.acosta.app.dto.ConductorDTOResponse;
-import com.upc.acosta.app.dto.DocumentoConductorDTORequest;
-import com.upc.acosta.app.dto.DocumentoConductorDTOResponse;
+import com.upc.acosta.app.dto.*;
 import com.upc.acosta.app.service.IDocumentoConductorService;
 import com.upc.acosta.app.service.IConductorService;
 import jakarta.validation.Valid;

@@ -5,7 +5,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 
 @Entity(name = "tb_conductores")
@@ -27,6 +29,9 @@ public class Conductor {
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_conductor", nullable = false, length = 20)
     private TipoConductor tipoConductor;
+
+    @Column(nullable = false)
+    private Boolean estado = false;
 
     @Column(nullable = false)
     private Boolean activo = true;
@@ -57,6 +62,20 @@ public class Conductor {
     @PreUpdate
     private void configurarAntesDeActualizar() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    //METODO PARA EVALUAR ESTADO DEL CONDUCTOR
+    public Boolean evaluarEstadoConductor(List<TipoDocumentoConductor> tiposObligatorios,
+                                          List<DocumentoConductor> documentos,
+                                          LocalDate fechaConsulta){
+        return tiposObligatorios.stream().allMatch(tipo ->
+                documentos.stream().anyMatch(documento ->
+                        documento.getTipoDocumentoConductor().equals(tipo)
+                                && documento.getFechaVencimiento() != null
+                                && !documento.getFechaVencimiento()
+                                .isBefore(fechaConsulta)
+                )
+        );
     }
 
     @Override

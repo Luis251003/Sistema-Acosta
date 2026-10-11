@@ -29,3 +29,11 @@ WHERE NOT EXISTS (
     FROM tb_tipo_documento_conductor
     WHERE nombre = 'Antecedentes Policiales'
 );
+
+INSERT INTO tb_tipo_documento_conductor (nombre)
+SELECT 'Otro'
+    WHERE NOT EXISTS (
+    SELECT 1
+    FROM tb_tipo_documento_conductor
+    WHERE nombre = 'Otro'
+);
