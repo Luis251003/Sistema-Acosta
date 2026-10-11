@@ -10,6 +10,7 @@ public record ConductorDTOResponse(
         String dni,
         String brevete,
         String fotoUrl,
-        TipoConductor tipoConductor
+        TipoConductor tipoConductor,
+        Boolean estado
 ) {
 }

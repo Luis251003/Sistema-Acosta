@@ -6,6 +6,7 @@ import com.upc.acosta.app.entity.Conductor;
 import com.upc.acosta.app.entity.DocumentoConductor;
 import com.upc.acosta.app.entity.TipoDocumentoConductor;
 import com.upc.acosta.app.error.BadRequestException;
+import com.upc.acosta.app.error.DataExistException;
 import com.upc.acosta.app.error.NotFoundException;
 import com.upc.acosta.app.repository.IConductorRepository;
 import com.upc.acosta.app.repository.IDocumentoConductorRepository;
@@ -63,6 +64,7 @@ public class DocumentoConductorService implements IDocumentoConductorService {
         Conductor conductor = obtenerConductor(idConductor);
         validarFechas(request);
         TipoDocumentoConductor tipoDocumento = obtenerTipoDocumento(request.idTipoDocumentoConductor());
+        validarTipoDocumentoUnico(idConductor, tipoDocumento.getIdTipoDocumentoConductor());
         String rutaArchivo = archivoService.subirDocumento(archivo);
 
         DocumentoConductor documento = new DocumentoConductor(
@@ -73,6 +75,10 @@ public class DocumentoConductorService implements IDocumentoConductorService {
                 request.fechaEmision(),
                 request.fechaVencimiento()
         );
+
+        //ACTUALIZAMOS EL ESTADO DEL CONDUCTOR DESPUES DE REGISTRAR EL DOCUMENTO
+        actualizarEstadoConductor(idConductor);
+
         return entityToResponse(documentoRepository.save(documento));
     }
 
@@ -87,6 +93,7 @@ public class DocumentoConductorService implements IDocumentoConductorService {
         DocumentoConductor documento = obtenerDocumento(idConductor, idDocumento);
         validarFechas(request);
         TipoDocumentoConductor tipoDocumento = obtenerTipoDocumento(request.idTipoDocumentoConductor());
+        validarTipoDocumentoUnico(idConductor, tipoDocumento.getIdTipoDocumentoConductor(), idDocumento);
 
         String rutaAnterior = null;
         if (archivo != null && !archivo.isEmpty()) {
@@ -102,6 +109,10 @@ public class DocumentoConductorService implements IDocumentoConductorService {
         if (rutaAnterior != null) {
             archivoService.eliminarDocumento(rutaAnterior);
         }
+
+        //ACTUALIZAMOS EL ESTADO DEL CONDUCTOR DESPUES DE REGISTRAR EL DOCUMENTO
+        actualizarEstadoConductor(idConductor);
+
         return entityToResponse(actualizado);
     }
 
@@ -112,8 +123,12 @@ public class DocumentoConductorService implements IDocumentoConductorService {
         documentoRepository.delete(documento);
         documentoRepository.flush();
         archivoService.eliminarDocumento(documento.getRutaArchivo());
+
+        //ACTUALIZAMOS EL ESTADO DEL CONDUCTOR DESPUES DE REGISTRAR EL DOCUMENTO
+        actualizarEstadoConductor(idConductor);
     }
 
+    //METODOS FUNCIONALES
     private Conductor obtenerConductor(Long idConductor) {
         return conductorRepository.findById(idConductor)
                 .orElseThrow(() -> new NotFoundException(
@@ -133,6 +148,29 @@ public class DocumentoConductorService implements IDocumentoConductorService {
                 .orElseThrow(() -> new NotFoundException(
                         "Tipo de documento con ID: " + idTipoDocumentoConductor + " no encontrado"
                 ));
+    }
+
+    private void validarTipoDocumentoUnico(Long idConductor, Long idTipoDocumentoConductor) {
+        if (documentoRepository.existsByConductor_IdAndTipoDocumentoConductor_IdTipoDocumentoConductor(
+                idConductor,
+                idTipoDocumentoConductor
+        )) {
+            throw new DataExistException("El conductor ya tiene registrado un documento de este tipo");
+        }
+    }
+
+    private void validarTipoDocumentoUnico(
+            Long idConductor,
+            Long idTipoDocumentoConductor,
+            Long idDocumento
+    ) {
+        if (documentoRepository.existsByConductor_IdAndTipoDocumentoConductor_IdTipoDocumentoConductorAndIdNot(
+                idConductor,
+                idTipoDocumentoConductor,
+                idDocumento
+        )) {
+            throw new DataExistException("El conductor ya tiene registrado un documento de este tipo");
+        }
     }
 
     private void validarFechas(DocumentoConductorDTORequest request) {
@@ -160,5 +198,23 @@ public class DocumentoConductorService implements IDocumentoConductorService {
                 documento.getCreatedAt(),
                 documento.getUpdatedAt()
         );
+    }
+
+    @Transactional
+    private void actualizarEstadoConductor(Long idConductor){
+        //Lista de tipos de documentos obligatorios
+        List<TipoDocumentoConductor> tiposObligatorios = tipoDocumentoRepository.findAll();
+        List<DocumentoConductor> documentos = documentoRepository.findAllByConductorId(idConductor);
+        LocalDate fechaConsulta = LocalDate.now();
+
+        Boolean response = tiposObligatorios.stream().allMatch(tipo ->
+                documentos.stream().anyMatch(documento ->
+                        documento.getTipoDocumentoConductor().equals(tipo)
+                                && documento.getFechaVencimiento() != null
+                                && !documento.getFechaVencimiento()
+                                .isBefore(fechaConsulta)
+                )
+        );
+        conductorRepository.actualizarEstadoPorId(idConductor, response);
     }
 }

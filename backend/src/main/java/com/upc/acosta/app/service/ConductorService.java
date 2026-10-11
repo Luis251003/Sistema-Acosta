@@ -52,7 +52,8 @@ public class ConductorService implements IConductorService{
                 persona.getDni(),
                 bean.getBrevete(),
                 bean.getFotoUrl(),
-                bean.getTipoConductor()
+                bean.getTipoConductor(),
+                bean.getEstado()
         );
     }
 
