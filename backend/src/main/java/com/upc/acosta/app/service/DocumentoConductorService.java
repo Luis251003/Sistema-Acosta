@@ -40,6 +40,12 @@ public class DocumentoConductorService implements IDocumentoConductorService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<TipoDocumentoConductor> listarTipos() {
+        return tipoDocumentoRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<DocumentoConductorDTOResponse> listar(Long idConductor) {
         obtenerConductor(idConductor);
         return documentoRepository.findAllByConductorIdOrderByCreatedAtDesc(idConductor)
@@ -207,7 +213,7 @@ public class DocumentoConductorService implements IDocumentoConductorService {
         List<DocumentoConductor> documentos = documentoRepository.findAllByConductorId(idConductor);
         LocalDate fechaConsulta = LocalDate.now();
 
-        Boolean response = tiposObligatorios.stream().allMatch(tipo ->
+        Boolean response = !tiposObligatorios.isEmpty() && tiposObligatorios.stream().allMatch(tipo ->
                 documentos.stream().anyMatch(documento ->
                         documento.getTipoDocumentoConductor().equals(tipo)
                                 && documento.getFechaVencimiento() != null

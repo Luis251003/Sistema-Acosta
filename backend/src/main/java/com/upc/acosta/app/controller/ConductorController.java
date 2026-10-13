@@ -33,6 +33,16 @@ public class ConductorController {
         return ResponseEntity.ok(conductores);
     }
 
+    @GetMapping("/tipos")
+    public ResponseEntity<?> listarTipos(){
+        return ResponseEntity.ok(conductorService.listarTipos());
+    }
+
+    @GetMapping("/documentos/tipos")
+    public ResponseEntity<?> listarTiposDocumento(){
+        return ResponseEntity.ok(documentoConductorService.listarTipos());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> obtenerId(@PathVariable Long id){
         ConductorDTOResponse bean = conductorService.buscarXId(id);
