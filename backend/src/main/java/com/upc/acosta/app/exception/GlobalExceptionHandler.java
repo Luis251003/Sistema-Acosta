@@ -5,12 +5,16 @@ import com.upc.acosta.app.error.DataExistException;
 import com.upc.acosta.app.error.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import tools.jackson.databind.exc.InvalidFormatException;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -54,5 +58,32 @@ public class GlobalExceptionHandler {
         error.put("error","Error de conflicto de datos");
         error.put("message",exc.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, String>> handleHttpMessageNotReadable(
+            HttpMessageNotReadableException ex) {
+
+        Throwable cause = ex.getMostSpecificCause();
+
+        if (cause instanceof InvalidFormatException invalidEx
+                && invalidEx.getTargetType().isEnum()) {
+
+            Class<?> enumClass = invalidEx.getTargetType();
+
+            String valoresPermitidos = Arrays.stream(enumClass.getEnumConstants())
+                    .map(Object::toString)
+                    .collect(Collectors.joining(", "));
+
+            String mensaje = "Valor inválido: '" + invalidEx.getValue()
+                    + "'. Valores permitidos: " + valoresPermitidos;
+
+            return ResponseEntity.badRequest()
+                    .body(Map.of("mensaje", mensaje));
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("mensaje",
+                        "El JSON enviado es inválido o tiene un formato incorrecto."));
     }
 }

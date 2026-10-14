@@ -11,9 +11,5 @@ public interface ICamionRepository extends JpaRepository<Camion, Long> {
     boolean existsByNumeroTuceIgnoreCase(String numeroTuce);
     boolean existsByNumeroTuceIgnoreCaseAndIdNot(String numeroTuce, Long id);
 
-    List<Camion> findByMarcaContainingIgnoreCaseOrModeloContainingIgnoreCaseOrPlacaContainingIgnoreCase(
-            String marca,
-            String modelo,
-            String placa
-    );
+    List<Camion> findByPlacaContainingIgnoreCase(String placa);
 }
