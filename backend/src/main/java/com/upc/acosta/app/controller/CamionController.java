@@ -54,8 +54,14 @@ public class CamionController {
     }
 
     @GetMapping("/buscar/{texto}")
-    public ResponseEntity<List<CamionDTOResponse>> buscarXNombreOPlaca(@PathVariable String texto) {
-        return ResponseEntity.ok(camionService.buscarXNombreOPlaca(texto));
+    public ResponseEntity<List<CamionDTOResponse>> buscarPorPlaca(@PathVariable String texto) {
+        return ResponseEntity.ok(camionService.buscarPorPlaca(texto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        camionService.eliminar(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/documentos")

@@ -10,5 +10,6 @@ public interface ICamionService {
     CamionDTOResponse actualizar(Long id, CamionDTORequest request);
     List<CamionDTOResponse> listar();
     CamionDTOResponse buscarXId(Long id);
-    List<CamionDTOResponse> buscarXNombreOPlaca(String texto);
+    List<CamionDTOResponse> buscarPorPlaca(String placa);
+    void eliminar(Long id);
 }

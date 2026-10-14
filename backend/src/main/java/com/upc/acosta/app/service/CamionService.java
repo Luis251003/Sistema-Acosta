@@ -111,21 +111,26 @@ public class CamionService implements ICamionService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CamionDTOResponse> buscarXNombreOPlaca(String texto) {
-        if (texto == null || texto.trim().isEmpty()) {
+    public List<CamionDTOResponse> buscarPorPlaca(String placa) {
+        if (placa == null || placa.trim().isEmpty()) {
             return List.of();
         }
 
-        String criterio = texto.trim();
-        return camionRepository
-                .findByMarcaContainingIgnoreCaseOrModeloContainingIgnoreCaseOrPlacaContainingIgnoreCase(
-                        criterio,
-                        criterio,
-                        criterio
-                )
+        return camionRepository.findByPlacaContainingIgnoreCase(placa.trim())
                 .stream()
                 .filter(camion -> Boolean.TRUE.equals(camion.getActivo()))
                 .map(this::entityToResponse)
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public void eliminar(Long id) {
+        Camion camion = camionRepository.findById(id)
+                .filter(existente -> Boolean.TRUE.equals(existente.getActivo()))
+                .orElseThrow(() -> new NotFoundException("Camión con ID: " + id + " no encontrado"));
+
+        camion.setActivo(false);
+        camionRepository.save(camion);
     }
 }
