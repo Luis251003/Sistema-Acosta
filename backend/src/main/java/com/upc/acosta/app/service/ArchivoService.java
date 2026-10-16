@@ -2,6 +2,7 @@ package com.upc.acosta.app.service;
 
 import com.upc.acosta.app.error.BadRequestException;
 import com.upc.acosta.app.error.ExternalServiceException;
+import com.upc.acosta.app.error.NotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -9,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.UUID;
 
@@ -66,6 +68,21 @@ public class ArchivoService implements IArchivoService {
     }
 
     @Override
+    public byte[] leerDocumento(String url) {
+        Path archivo = resolverDocumento(url);
+        if (!archivo.getFileName().toString().endsWith(".pdf")) {
+            throw new BadRequestException("Solo se pueden devolver documentos PDF");
+        }
+        try {
+            return Files.readAllBytes(archivo);
+        } catch (NoSuchFileException exception) {
+            throw new NotFoundException("El archivo del documento no fue encontrado");
+        } catch (IOException exception) {
+            throw new ExternalServiceException("No se pudo leer el documento localmente");
+        }
+    }
+
+    @Override
     public void eliminarDocumento(String url) {
         eliminar(url, directorioDocumentos, DOCUMENTO_URL_PREFIX, "pdf|jpg|png", "el documento");
     }
@@ -90,6 +107,29 @@ public class ArchivoService implements IArchivoService {
             throw new BadRequestException("La ruta de " + tipoArchivo + " no es válida");
         }
 
+        Path archivo = resolverArchivo(url, directorio, prefijo, extensiones, tipoArchivo);
+
+        try {
+            Files.deleteIfExists(archivo);
+        } catch (IOException exception) {
+            throw new ExternalServiceException("No se pudo eliminar " + tipoArchivo + " localmente");
+        }
+    }
+
+    private Path resolverDocumento(String url) {
+        if (url == null || !url.startsWith(DOCUMENTO_URL_PREFIX)) {
+            throw new BadRequestException("La ruta del documento no es válida");
+        }
+        return resolverArchivo(url, directorioDocumentos, DOCUMENTO_URL_PREFIX, "pdf|jpg|png", "el documento");
+    }
+
+    private Path resolverArchivo(
+            String url,
+            Path directorio,
+            String prefijo,
+            String extensiones,
+            String tipoArchivo
+    ) {
         String nombreArchivo = url.substring(prefijo.length());
         String patronNombre = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.(" + extensiones + ")";
         if (!nombreArchivo.matches(patronNombre)) {
@@ -100,12 +140,7 @@ public class ArchivoService implements IArchivoService {
         if (!archivo.startsWith(directorio)) {
             throw new BadRequestException("La ruta de " + tipoArchivo + " no es válida");
         }
-
-        try {
-            Files.deleteIfExists(archivo);
-        } catch (IOException exception) {
-            throw new ExternalServiceException("No se pudo eliminar " + tipoArchivo + " localmente");
-        }
+        return archivo;
     }
 
     private void validar(MultipartFile archivo, long maxSize, String mensajeTamano) {

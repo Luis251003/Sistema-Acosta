@@ -99,6 +99,13 @@ public class ConductorController {
         return ResponseEntity.ok(documentoConductorService.buscar(id, idDocumento));
     }
 
+    @GetMapping("/documentos/{idDocumento}/archivo")
+    public ResponseEntity<byte[]> obtenerArchivoDocumento(@PathVariable Long idDocumento) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(documentoConductorService.obtenerArchivo(idDocumento));
+    }
+
     @PostMapping(value = "/{id}/documentos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<DocumentoConductorDTOResponse> registrarDocumento(
             @PathVariable Long id,

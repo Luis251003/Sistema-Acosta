@@ -6,5 +6,6 @@ public interface IArchivoService {
     String subir(MultipartFile archivo);
     void eliminar(String url);
     String subirDocumento(MultipartFile archivo);
+    byte[] leerDocumento(String url);
     void eliminarDocumento(String url);
 }

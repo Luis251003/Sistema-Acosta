@@ -69,6 +69,13 @@ public class CamionController {
         return ResponseEntity.ok(documentoCamionService.listar(id));
     }
 
+    @GetMapping("/documentos/{idDocumento}/archivo")
+    public ResponseEntity<byte[]> obtenerArchivoDocumento(@PathVariable Long idDocumento) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(documentoCamionService.obtenerArchivo(idDocumento));
+    }
+
     @PostMapping(value = "/{id}/documentos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<DocumentoCamionDTOResponse> registrarDocumento(
             @PathVariable Long id,
