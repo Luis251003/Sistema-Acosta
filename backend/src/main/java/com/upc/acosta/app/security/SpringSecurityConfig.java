@@ -54,6 +54,10 @@ public class SpringSecurityConfig {
         .csrf(AbstractHttpConfigurer::disable)
         .cors(cors->cors.configurationSource(corsConfigurationSource()))
         .authorizeHttpRequests((auth)->auth
+                // Las fotografías de conductores serán públicas.
+                .requestMatchers("/uploads/conductores/**")
+                .permitAll()
+
                 // Solo ADMIN y OPERADOR
                 .requestMatchers("/api/usuario/**")
                 .hasAnyRole("ADMIN", "OPERADOR")

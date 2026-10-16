@@ -84,4 +84,9 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
                 .signWith(SECRET_KEY)
                 .compact();
     }
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return request.getServletPath()
+                .startsWith("/uploads/conductores/");
+    }
 }
