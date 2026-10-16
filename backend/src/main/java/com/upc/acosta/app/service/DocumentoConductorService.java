@@ -61,6 +61,16 @@ public class DocumentoConductorService implements IDocumentoConductorService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public byte[] obtenerArchivo(Long idDocumento) {
+        DocumentoConductor documento = documentoRepository.findById(idDocumento)
+                .orElseThrow(() -> new NotFoundException(
+                        "Documento con ID: " + idDocumento + " no encontrado"
+                ));
+        return archivoService.leerDocumento(documento.getRutaArchivo());
+    }
+
+    @Override
     @Transactional
     public DocumentoConductorDTOResponse registrar(
             Long idConductor,

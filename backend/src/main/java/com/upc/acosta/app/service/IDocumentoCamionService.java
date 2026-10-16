@@ -8,6 +8,7 @@ import java.util.List;
 
 public interface IDocumentoCamionService {
     List<DocumentoCamionDTOResponse> listar(Long idCamion);
+    byte[] obtenerArchivo(Long idDocumento);
     DocumentoCamionDTOResponse registrar(
             Long idCamion,
             DocumentoCamionDTORequest request,
