@@ -4,6 +4,7 @@ import com.upc.acosta.app.error.BadRequestException;
 import com.upc.acosta.app.error.ExternalServiceException;
 import com.upc.acosta.app.error.NotFoundException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -49,6 +50,24 @@ public class ArchivoService implements IArchivoService {
     @Override
     public void eliminar(String url) {
         eliminar(url, directorioFotos, FOTO_URL_PREFIX, "jpg|png", "la fotografía");
+    }
+
+    @Override
+    public ArchivoContenido leerFoto(String url) {
+        if (url == null || !url.startsWith(FOTO_URL_PREFIX)) {
+            throw new BadRequestException("La ruta de la fotografía no es válida");
+        }
+        Path archivo = resolverArchivo(url, directorioFotos, FOTO_URL_PREFIX, "jpg|png", "la fotografía");
+        try {
+            MediaType tipoContenido = archivo.getFileName().toString().endsWith(".png")
+                    ? MediaType.IMAGE_PNG
+                    : MediaType.IMAGE_JPEG;
+            return new ArchivoContenido(Files.readAllBytes(archivo), tipoContenido);
+        } catch (NoSuchFileException exception) {
+            throw new NotFoundException("El archivo de la fotografía no fue encontrado");
+        } catch (IOException exception) {
+            throw new ExternalServiceException("No se pudo leer la fotografía localmente");
+        }
     }
 
     @Override

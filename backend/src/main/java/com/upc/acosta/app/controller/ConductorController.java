@@ -3,6 +3,7 @@ package com.upc.acosta.app.controller;
 import com.upc.acosta.app.dto.*;
 import com.upc.acosta.app.service.IDocumentoConductorService;
 import com.upc.acosta.app.service.IConductorService;
+import com.upc.acosta.app.service.ArchivoContenido;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -84,6 +85,14 @@ public class ConductorController {
         return ResponseEntity.ok(
                 conductorService.actualizarFoto(id, foto)
         );
+    }
+
+    @GetMapping("/{id}/foto")
+    public ResponseEntity<byte[]> obtenerFoto(@PathVariable Long id) {
+        ArchivoContenido foto = conductorService.obtenerFoto(id);
+        return ResponseEntity.ok()
+                .contentType(foto.tipoContenido())
+                .body(foto.contenido());
     }
 
     @GetMapping("/{id}/documentos")

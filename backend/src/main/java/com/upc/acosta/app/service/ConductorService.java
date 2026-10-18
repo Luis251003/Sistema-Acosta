@@ -174,6 +174,17 @@ public class ConductorService implements IConductorService{
         return fotoUrl;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ArchivoContenido obtenerFoto(Long id) {
+        Conductor conductor = conductorRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Conductor con ID: " + id + " no encontrado"));
+        if (conductor.getFotoUrl() == null) {
+            throw new NotFoundException("El conductor con ID: " + id + " no tiene una fotografía registrada");
+        }
+        return archivoService.leerFoto(conductor.getFotoUrl());
+    }
+
     private void validarFoto(MultipartFile archivo) {
 
         if (archivo == null || archivo.isEmpty()) {
