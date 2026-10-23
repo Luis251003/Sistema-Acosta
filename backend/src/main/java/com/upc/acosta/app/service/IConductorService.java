@@ -16,4 +16,5 @@ public interface IConductorService {
     List<ConductorDTOResponse> buscarXNombreOBrevete(String texto);
     void eliminar(Long id);
     String actualizarFoto(Long id, MultipartFile foto);
+    ArchivoContenido obtenerFoto(Long id);
 }

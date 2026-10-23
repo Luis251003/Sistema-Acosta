@@ -17,7 +17,7 @@ public class UsuarioController {
     }
 
     @GetMapping("/{email}")
-    public ResponseEntity<?> buscarXId(@PathVariable String email){
+    public ResponseEntity<?> buscarXEmail(@PathVariable String email){
         UsuarioDTOResponse bean = usuarioService.buscarXCorreo(email);
         return ResponseEntity.status(HttpStatus.OK).body(bean);
     }

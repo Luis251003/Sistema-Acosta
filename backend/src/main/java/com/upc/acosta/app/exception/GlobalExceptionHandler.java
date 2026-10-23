@@ -9,6 +9,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import tools.jackson.databind.exc.InvalidFormatException;
 
 import java.util.Arrays;
@@ -40,6 +41,16 @@ public class GlobalExceptionHandler {
         error.put("error","Error en el ingreso de datos");
         error.put("message",exc.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, String>> handleMaxUploadSizeExceeded(
+            MaxUploadSizeExceededException ex
+    ) {
+        return ResponseEntity.badRequest().body(Map.of(
+                "error", "Error en el ingreso de datos",
+                "message", "El archivo supera el tamaño máximo permitido"
+        ));
     }
 
     //Manejamos los datos no encontrados
