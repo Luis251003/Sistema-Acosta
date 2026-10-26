@@ -6,6 +6,7 @@ import com.upc.acosta.app.dto.ClienteUpdateDTORequest;
 import com.upc.acosta.app.dto.RucDTOResponse;
 import com.upc.acosta.app.service.IClienteService;
 import com.upc.acosta.app.service.IOperacionService;
+import com.upc.acosta.app.service.IRucService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,15 +19,23 @@ import java.util.List;
 public class ClienteController {
 
     private final IClienteService clienteService;
+    private final IRucService rucService;
 
-    public ClienteController(IClienteService clienteService) {
+    public ClienteController(IClienteService clienteService, IRucService rucService) {
         this.clienteService = clienteService;
+        this.rucService = rucService;
     }
 
     @GetMapping
     public ResponseEntity<?> listar(){
         List<ClienteDTOResponse> clientes = clienteService.listar();
         return ResponseEntity.ok(clientes);
+    }
+
+    @GetMapping("/ruc/{ruc}")
+    public ResponseEntity<?> buscarXRuc(@PathVariable String ruc){
+        RucDTOResponse rucResponse = rucService.consultarRUC(ruc);
+        return ResponseEntity.ok(rucResponse);
     }
 
     @GetMapping("/{id}")

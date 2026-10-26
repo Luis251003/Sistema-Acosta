@@ -13,15 +13,15 @@ import org.springframework.web.client.RestClientException;
 import static com.upc.acosta.app.security.TokenJwtConfig.*;
 
 @Service
-public class ConsultaRUCService {
+public class ConsultaRUCService implements IRucService{
 
     private final RestClient restClient;
     private final String KEY;
 
     public ConsultaRUCService(
             RestClient.Builder builder,
-            @Value("${app.chequea.pe.url}") String url,
-            @Value("${app.chequea.pe.api-key}") String key
+            @Value("${CHEQUEA_API_URL}") String url,
+            @Value("${CHEQUEA_API_KEY}") String key
     ) {
         this.restClient = builder
                 .baseUrl(url)
