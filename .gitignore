@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # ==============================
 # Java y Spring Boot
 # ==============================
@@ -69,3 +70,9 @@ docker-compose.local.yml
 *.tmp
 *.swp
 *.bak
+=======
+.env
+target/
+>>>>>>> f2c0f1f121712623d42740de42ef5e9b0b8624c5
+.DS_Store
+.DS_Store

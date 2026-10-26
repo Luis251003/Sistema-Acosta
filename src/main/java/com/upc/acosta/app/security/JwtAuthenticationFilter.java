@@ -19,6 +19,7 @@ import tools.jackson.core.exc.StreamReadException;
 import tools.jackson.databind.DatabindException;
 import tools.jackson.databind.ObjectMapper;
 
+import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.util.*;
 
@@ -28,10 +29,12 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
     private final AuthenticationManager authenticationManager;
     private final long jwtExpiration;
+    private final SecretKey secretKey;
 
-    public JwtAuthenticationFilter(AuthenticationManager authenticationManager, long jwtExpiration) {
+    public JwtAuthenticationFilter(AuthenticationManager authenticationManager, long jwtExpiration, SecretKey secretKey) {
         this.authenticationManager = authenticationManager;
         this.jwtExpiration=jwtExpiration;
+        this.secretKey=secretKey;
     }
 
     @Override
@@ -83,7 +86,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 .claim("authorities", roleNames)
                 .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .issuedAt(new Date())
-                .signWith(SECRET_KEY)
+                .signWith(secretKey)
                 .compact();
         //Agregamos el token al encabezado
         response.addHeader(HEADER_AUTHORIZATION,PREFIX_TOKEN + token);

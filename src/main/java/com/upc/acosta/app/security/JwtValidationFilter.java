@@ -7,6 +7,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -24,14 +25,16 @@ import java.util.*;
 public class JwtValidationFilter extends BasicAuthenticationFilter {
 
     private final long jwtExpiration;
+    private final SecretKey secretKey;
 
-    public JwtValidationFilter(AuthenticationManager authenticationManager, long jwtExpiration) {
+    public JwtValidationFilter(AuthenticationManager authenticationManager, long jwtExpiration, SecretKey secretKey) {
         super(authenticationManager);
         this.jwtExpiration = jwtExpiration;
+        this.secretKey = secretKey;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
+    protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain chain) throws IOException, ServletException {
         String header = request.getHeader(HEADER_AUTHORIZATION);
         if(header == null || !header.startsWith(PREFIX_TOKEN)){
             chain.doFilter(request,response);
@@ -40,7 +43,7 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
         String token = header.replace(PREFIX_TOKEN,"");
 
         try{
-            Claims claims = Jwts.parser().verifyWith(SECRET_KEY).build().parseSignedClaims(token).getPayload();
+            Claims claims = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload();
             String email = claims.getSubject();
             List<String> roles = claims.get("authorities", List.class);
 
@@ -81,7 +84,7 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
                         .toList())
                 .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .issuedAt(new Date())
-                .signWith(SECRET_KEY)
+                .signWith(secretKey)
                 .compact();
     }
 }

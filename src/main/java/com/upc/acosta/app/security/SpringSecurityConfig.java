@@ -1,5 +1,7 @@
 package com.upc.acosta.app.security;
 
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -20,6 +22,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+import javax.crypto.SecretKey;
 import java.util.Arrays;
 
 @Configuration
@@ -30,6 +33,11 @@ public class SpringSecurityConfig {
 
     @Value("${jwt.expiration}")
     private long jwtExpiration;
+
+    @Bean
+    public SecretKey jwtSecretKey(@Value("${JWT_SECRET}") String secret) {
+        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
+    }
 
     @Bean
     public RestClient.Builder restClientBuilder() {
@@ -47,10 +55,10 @@ public class SpringSecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity httpSecurity){
+    SecurityFilterChain filterChain(HttpSecurity httpSecurity,SecretKey secretKey){
         return httpSecurity
-        .addFilter(new JwtAuthenticationFilter(authenticationConfiguration.getAuthenticationManager(),jwtExpiration))
-        .addFilter(new JwtValidationFilter(authenticationConfiguration.getAuthenticationManager(),jwtExpiration))
+        .addFilter(new JwtAuthenticationFilter(authenticationConfiguration.getAuthenticationManager(),jwtExpiration,secretKey))
+        .addFilter(new JwtValidationFilter(authenticationConfiguration.getAuthenticationManager(),jwtExpiration,secretKey))
         .csrf(AbstractHttpConfigurer::disable)
         .cors(cors->cors.configurationSource(corsConfigurationSource()))
         .authorizeHttpRequests((auth)->auth
