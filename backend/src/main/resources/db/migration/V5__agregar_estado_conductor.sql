@@ -1,2 +1,0 @@
-ALTER TABLE tb_conductores
-    ADD COLUMN estado BOOLEAN NOT NULL DEFAULT FALSE;
