@@ -10,6 +10,8 @@ import com.upc.acosta.app.error.NotFoundException;
 import com.upc.acosta.app.repository.IConductorRepository;
 import com.upc.acosta.app.repository.IEmpleadoRepository;
 import com.upc.acosta.app.repository.ITipoDocumentoRepository;
+import com.upc.acosta.app.specification.ConductorSpecification;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -72,10 +74,10 @@ public class ConductorService implements IConductorService{
 
     @Override
     @Transactional(readOnly = true)
-    public List<ConductorDTOResponse> listar() {
-        return conductorRepository.findAll()
+    public List<ConductorDTOResponse> listar(String busqueda, TipoConductor tipoConductor) {
+        Specification<Conductor> spec = ConductorSpecification.filtrar(busqueda,tipoConductor);
+        return conductorRepository.findAll(spec)
                 .stream()
-                .filter((x)->x.getActivo()==true)
                 .map(this::entityToResponse)
                 .collect(Collectors.toList());
     }

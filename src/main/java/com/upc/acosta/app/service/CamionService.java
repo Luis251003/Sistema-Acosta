@@ -3,14 +3,13 @@ package com.upc.acosta.app.service;
 import com.upc.acosta.app.dto.CamionDTORequest;
 import com.upc.acosta.app.dto.CamionDTOResponse;
 import com.upc.acosta.app.dto.TipoDocumentoDTOResponse;
-import com.upc.acosta.app.entity.Camion;
-import com.upc.acosta.app.entity.EstadoCamion;
-import com.upc.acosta.app.entity.RolDocumento;
-import com.upc.acosta.app.entity.TipoDocumento;
+import com.upc.acosta.app.entity.*;
 import com.upc.acosta.app.error.DataExistException;
 import com.upc.acosta.app.error.NotFoundException;
 import com.upc.acosta.app.repository.ICamionRepository;
 import com.upc.acosta.app.repository.ITipoDocumentoRepository;
+import com.upc.acosta.app.specification.CamionSpecification;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -109,9 +108,9 @@ public class CamionService implements ICamionService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CamionDTOResponse> listar() {
-        return camionRepository.findAll().stream()
-                .filter(camion -> Boolean.TRUE.equals(camion.getActivo()))
+    public List<CamionDTOResponse> listar(String busqueda, TipoVehiculo tipoVehiculo) {
+        Specification<Camion> spec = CamionSpecification.filtrar(busqueda,tipoVehiculo);
+        return camionRepository.findAll(spec).stream()
                 .map(this::entityToResponse)
                 .toList();
     }

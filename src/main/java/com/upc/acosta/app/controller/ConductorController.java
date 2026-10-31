@@ -2,6 +2,7 @@ package com.upc.acosta.app.controller;
 
 import com.upc.acosta.app.dto.*;
 import com.upc.acosta.app.entity.RolDocumento;
+import com.upc.acosta.app.entity.TipoConductor;
 import com.upc.acosta.app.service.IConductorService;
 import com.upc.acosta.app.service.IDocumentoService;
 import jakarta.validation.Valid;
@@ -29,14 +30,12 @@ public class ConductorController {
     }
 
     @GetMapping
-    public ResponseEntity<?> listar(){
-        List<ConductorDTOResponse> conductores = conductorService.listar();
+    public ResponseEntity<?> listar(
+            @RequestParam(required = false) String busqueda,
+            @RequestParam(required = false) TipoConductor tipoConductor
+            ){
+        List<ConductorDTOResponse> conductores = conductorService.listar(busqueda, tipoConductor);
         return ResponseEntity.ok(conductores);
-    }
-
-    @GetMapping("/tipos")
-    public ResponseEntity<?> listarTipos(){
-        return ResponseEntity.ok(conductorService.listarTipos());
     }
 
     @GetMapping("/tiposDocumento")
