@@ -1,8 +1,9 @@
 package com.upc.acosta.app.controller;
 
 import com.upc.acosta.app.dto.*;
+import com.upc.acosta.app.entity.RolDocumento;
 import com.upc.acosta.app.service.IConductorService;
-import com.upc.acosta.app.service.ArchivoContenido;
+import com.upc.acosta.app.service.IDocumentoService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,14 +18,14 @@ import java.util.List;
 public class ConductorController {
 
     private final IConductorService conductorService;
-//    private final IDocumentoConductorService documentoConductorService;
+    private final IDocumentoService documentoService;
 
     public ConductorController(
-            IConductorService conductorService
-//            IDocumentoConductorService documentoConductorService
+            IConductorService conductorService,
+            IDocumentoService documentoService
     ) {
         this.conductorService = conductorService;
-//        this.documentoConductorService = documentoConductorService;
+        this.documentoService = documentoService;
     }
 
     @GetMapping
@@ -38,10 +39,10 @@ public class ConductorController {
         return ResponseEntity.ok(conductorService.listarTipos());
     }
 
-//    @GetMapping("/documentos/tipos")
-//    public ResponseEntity<?> listarTiposDocumento(){
-//        return ResponseEntity.ok(documentoConductorService.listarTipos());
-//    }
+    @GetMapping("/tiposDocumento")
+    public ResponseEntity<?> listarTiposDocumento(){
+        return ResponseEntity.ok(conductorService.listarTiposDocumento());
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> obtenerId(@PathVariable Long id){
@@ -80,66 +81,57 @@ public class ConductorController {
     public ResponseEntity<String> actualizarFoto(
             @PathVariable Long id,
             @RequestParam("foto") MultipartFile foto) {
-
-        return ResponseEntity.ok(
-                conductorService.actualizarFoto(id, foto)
-        );
+        conductorService.actualizarFoto(id, foto);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/foto")
-    public ResponseEntity<byte[]> obtenerFoto(@PathVariable Long id) {
-        ArchivoContenido foto = conductorService.obtenerFoto(id);
-        return ResponseEntity.ok()
-                .contentType(foto.tipoContenido())
-                .body(foto.contenido());
+    public ResponseEntity<String> obtenerFoto(@PathVariable Long id) {
+        String url = conductorService.obtenerURLFoto(id);
+        return ResponseEntity.ok(url);
     }
 
-//    @GetMapping("/{id}/documentos")
-//    public ResponseEntity<List<DocumentoConductorDTOResponse>> listarDocumentos(@PathVariable Long id) {
-//        return ResponseEntity.ok(documentoConductorService.listar(id));
-//    }
-//
-//    @GetMapping("/{id}/documentos/{idDocumento}")
-//    public ResponseEntity<DocumentoConductorDTOResponse> obtenerDocumento(
-//            @PathVariable Long id,
-//            @PathVariable Long idDocumento
-//    ) {
-//        return ResponseEntity.ok(documentoConductorService.buscar(id, idDocumento));
-//    }
-//
-//    @GetMapping("/documentos/{idDocumento}/archivo")
-//    public ResponseEntity<byte[]> obtenerArchivoDocumento(@PathVariable Long idDocumento) {
-//        return ResponseEntity.ok()
-//                .contentType(MediaType.APPLICATION_PDF)
-//                .body(documentoConductorService.obtenerArchivo(idDocumento));
-//    }
-//
-//    @PostMapping(value = "/{id}/documentos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    public ResponseEntity<DocumentoConductorDTOResponse> registrarDocumento(
-//            @PathVariable Long id,
-//            @Valid @RequestPart("datos") DocumentoConductorDTORequest datos,
-//            @RequestPart("archivo") MultipartFile archivo
-//    ) {
-//        return ResponseEntity.status(HttpStatus.CREATED)
-//                .body(documentoConductorService.registrar(id, datos, archivo));
-//    }
-//
-//    @PutMapping(value = "/{id}/documentos/{idDocumento}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    public ResponseEntity<DocumentoConductorDTOResponse> actualizarDocumento(
-//            @PathVariable Long id,
-//            @PathVariable Long idDocumento,
-//            @Valid @RequestPart("datos") DocumentoConductorDTORequest datos,
-//            @RequestPart(value = "archivo", required = false) MultipartFile archivo
-//    ) {
-//        return ResponseEntity.ok(documentoConductorService.actualizar(id, idDocumento, datos, archivo));
-//    }
-//
-//    @DeleteMapping("/{id}/documentos/{idDocumento}")
-//    public ResponseEntity<Void> eliminarDocumento(
-//            @PathVariable Long id,
-//            @PathVariable Long idDocumento
-//    ) {
-//        documentoConductorService.eliminar(id, idDocumento);
-//        return ResponseEntity.noContent().build();
-//    }
+    @GetMapping("/{id}/documentos")
+    public ResponseEntity<List<DocumentoDTOResponse>> listarDocumentos(@PathVariable Long id) {
+        return ResponseEntity.ok(documentoService.listarDocumentos(id, RolDocumento.CONDUCTOR));
+    }
+
+    @PostMapping(
+            value = "/{id}/documentos",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<DocumentoDTOResponse> registrarDocumento(
+            @PathVariable Long id,
+            @Valid @RequestPart("datos") DocumentoDTORequest datos,
+            @RequestPart("archivo") MultipartFile archivo) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(documentoService.registrarDocumento(id, datos, archivo, RolDocumento.CONDUCTOR));
+    }
+
+    @GetMapping("/{id}/documento/{idDocumento}")
+    public ResponseEntity<String> obtenerFoto(@PathVariable Long id, @PathVariable Long idDocumento) {
+        String url = documentoService.obtenerArchivoURL(id, idDocumento, RolDocumento.CONDUCTOR);
+        return ResponseEntity.ok(url);
+    }
+
+    @PutMapping(
+            value = "/{id}/documentos/{idDocumento}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<DocumentoDTOResponse> actualizarDocumento(
+            @PathVariable Long id,
+            @PathVariable Long idDocumento,
+            @Valid @RequestPart("datos") DocumentoDTORequest datos,
+            @RequestPart(value = "archivo", required = false) MultipartFile archivo
+    ) {
+        return ResponseEntity.ok(documentoService.actualizarDocumento(id, idDocumento, datos, archivo, RolDocumento.CONDUCTOR));
+    }
+
+    @DeleteMapping("/{id}/documentos/{idDocumento}")
+    public ResponseEntity<Void> eliminarDocumento(
+            @PathVariable Long id,
+            @PathVariable Long idDocumento
+    ) {
+        documentoService.eliminar(id, idDocumento, RolDocumento.CONDUCTOR);
+        return ResponseEntity.noContent().build();
+    }
 }

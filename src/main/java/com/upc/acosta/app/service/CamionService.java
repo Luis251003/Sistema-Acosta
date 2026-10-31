@@ -2,25 +2,33 @@ package com.upc.acosta.app.service;
 
 import com.upc.acosta.app.dto.CamionDTORequest;
 import com.upc.acosta.app.dto.CamionDTOResponse;
+import com.upc.acosta.app.dto.TipoDocumentoDTOResponse;
 import com.upc.acosta.app.entity.Camion;
 import com.upc.acosta.app.entity.EstadoCamion;
+import com.upc.acosta.app.entity.RolDocumento;
+import com.upc.acosta.app.entity.TipoDocumento;
 import com.upc.acosta.app.error.DataExistException;
 import com.upc.acosta.app.error.NotFoundException;
 import com.upc.acosta.app.repository.ICamionRepository;
+import com.upc.acosta.app.repository.ITipoDocumentoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Locale;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class CamionService implements ICamionService {
 
     private final ICamionRepository camionRepository;
+    private final ITipoDocumentoRepository iTipoDocumentoRepository;
 
-    public CamionService(ICamionRepository camionRepository) {
+    public CamionService(ICamionRepository camionRepository, ITipoDocumentoRepository iTipoDocumentoRepository) {
         this.camionRepository = camionRepository;
+        this.iTipoDocumentoRepository = iTipoDocumentoRepository;
     }
 
     private Camion requestToEntity(CamionDTORequest request) {
@@ -44,6 +52,14 @@ public class CamionService implements ICamionService {
                 camion.getNumeroTuce(),
                 camion.getTipoVehiculo(),
                 camion.getEstado() == EstadoCamion.HABILITADO
+        );
+    }
+
+    private TipoDocumentoDTOResponse entityTipoDocumentoToResponse(TipoDocumento bean){
+        return new TipoDocumentoDTOResponse(
+                bean.getIdTipoDocumento(),
+                bean.getNombre(),
+                bean.getRol().toString()
         );
     }
 
@@ -98,6 +114,11 @@ public class CamionService implements ICamionService {
                 .filter(camion -> Boolean.TRUE.equals(camion.getActivo()))
                 .map(this::entityToResponse)
                 .toList();
+    }
+
+    @Override
+    public Set<TipoDocumentoDTOResponse> listarTiposDocumento() {
+        return iTipoDocumentoRepository.findByRol(RolDocumento.CAMION).stream().map(this::entityTipoDocumentoToResponse).collect(Collectors.toSet());
     }
 
     @Override
