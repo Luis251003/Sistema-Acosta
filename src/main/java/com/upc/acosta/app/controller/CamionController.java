@@ -1,10 +1,8 @@
 package com.upc.acosta.app.controller;
 
-import com.upc.acosta.app.dto.CamionDTORequest;
-import com.upc.acosta.app.dto.CamionDTOResponse;
-import com.upc.acosta.app.dto.DocumentoDTORequest;
-import com.upc.acosta.app.dto.DocumentoDTOResponse;
+import com.upc.acosta.app.dto.*;
 import com.upc.acosta.app.entity.RolDocumento;
+import com.upc.acosta.app.entity.TipoVehiculo;
 import com.upc.acosta.app.service.IDocumentoService;
 import jakarta.validation.Valid;
 import com.upc.acosta.app.service.ICamionService;
@@ -13,7 +11,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.yaml.snakeyaml.events.Event;
 
 import java.util.List;
 
@@ -33,8 +30,12 @@ public class CamionController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CamionDTOResponse>> listar() {
-        return ResponseEntity.ok(camionService.listar());
+    public ResponseEntity<List<CamionDTOResponse>> listar(
+            @RequestParam(required = false) String busqueda,
+            @RequestParam(required = false) TipoVehiculo tipoVehiculo
+            ) {
+        List<CamionDTOResponse> camiones = camionService.listar(busqueda,tipoVehiculo);
+        return ResponseEntity.ok(camiones);
     }
 
     @PostMapping

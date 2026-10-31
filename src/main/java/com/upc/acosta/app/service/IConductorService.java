@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Set;
 
 public interface IConductorService {
-    List<ConductorDTOResponse> listar();
+    List<ConductorDTOResponse> listar(String busqueda, TipoConductor tipoConductor);
     List<TipoConductor> listarTipos();
     Set<TipoDocumentoDTOResponse> listarTiposDocumento();
     ConductorDTOResponse buscarXId(Long id);

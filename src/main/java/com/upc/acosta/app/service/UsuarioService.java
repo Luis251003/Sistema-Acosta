@@ -19,7 +19,13 @@ public class UsuarioService implements IUsuarioService{
 
     //METODOS DE CONVERSION
     private UsuarioDTOResponse entityToResponse(Usuario user){
-        return new UsuarioDTOResponse(user.getId(),user.getEmail(),user.getRoles());
+        //Obtener empleado
+        var empleado = user.getEmpleado();
+        String firstName = empleado.getNombre().split("\\s+")[0];
+        String firstLastname = empleado.getApellido().split("\\s+")[0];
+        String nombre = firstName.concat(" " + firstLastname);
+        //Devolvemos el usuario encontrado
+        return new UsuarioDTOResponse(user.getId(),user.getEmail(),nombre);
     }
 
     //BUSCAR USUARIO POR CORREO
