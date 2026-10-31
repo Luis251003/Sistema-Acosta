@@ -2,20 +2,21 @@ package com.upc.acosta.app.service;
 
 import com.upc.acosta.app.dto.ConductorDTORequest;
 import com.upc.acosta.app.dto.ConductorDTOResponse;
-import com.upc.acosta.app.entity.Conductor;
-import com.upc.acosta.app.entity.Empleado;
-import com.upc.acosta.app.entity.TipoConductor;
+import com.upc.acosta.app.dto.TipoDocumentoDTOResponse;
+import com.upc.acosta.app.entity.*;
 import com.upc.acosta.app.error.BadRequestException;
 import com.upc.acosta.app.error.DataExistException;
 import com.upc.acosta.app.error.NotFoundException;
 import com.upc.acosta.app.repository.IConductorRepository;
 import com.upc.acosta.app.repository.IEmpleadoRepository;
+import com.upc.acosta.app.repository.ITipoDocumentoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,16 +27,19 @@ public class ConductorService implements IConductorService{
     private final IEmpleadoRepository personaRepository;
 
     //SERVICIOS
+    private final ITipoDocumentoRepository iTipoDocumentoRepository;
     private final IArchivoService archivoService;
 
     //METODO CONSTRUCTOR
     public ConductorService(
             IConductorRepository conductorRepository,
             IEmpleadoRepository personaRepository,
+            ITipoDocumentoRepository iTipoDocumentoRepository,
             IArchivoService archivoService
     ) {
         this.conductorRepository = conductorRepository;
         this.personaRepository = personaRepository;
+        this.iTipoDocumentoRepository = iTipoDocumentoRepository;
         this.archivoService = archivoService;
     }
 
@@ -58,6 +62,14 @@ public class ConductorService implements IConductorService{
         );
     }
 
+    private TipoDocumentoDTOResponse entityTipoDocumentoToResponse(TipoDocumento bean){
+        return new TipoDocumentoDTOResponse(
+                bean.getIdTipoDocumento(),
+                bean.getNombre(),
+                bean.getRol().toString()
+        );
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<ConductorDTOResponse> listar() {
@@ -72,6 +84,11 @@ public class ConductorService implements IConductorService{
     @Transactional(readOnly = true)
     public List<TipoConductor> listarTipos() {
         return List.of(TipoConductor.values());
+    }
+
+    @Override
+    public Set<TipoDocumentoDTOResponse> listarTiposDocumento() {
+        return iTipoDocumentoRepository.findByRol(RolDocumento.CONDUCTOR).stream().map(this::entityTipoDocumentoToResponse).collect(Collectors.toSet());
     }
 
     @Override
@@ -154,7 +171,9 @@ public class ConductorService implements IConductorService{
         conductorRepository.save(bean);
     }
 
-    public String actualizarFoto(Long id, MultipartFile foto){
+    @Override
+    @Transactional
+    public void actualizarFoto(Long id, MultipartFile foto){
 
         //OBTENEMOS AL CONDUCTOR
         Conductor conductor = conductorRepository.findById(id)
@@ -162,27 +181,32 @@ public class ConductorService implements IConductorService{
         //VALIDAMOS LA FOTO
         validarFoto(foto);
 
+        //SUBIMOS LA FOTO
+        String fotoKey = archivoService.subirFoto(foto);
+
         //VALIDAMOS QUE NO HAYA FOTO
         if (conductor.getFotoUrl() != null) {
-            archivoService.eliminar(conductor.getFotoUrl());
+            archivoService.eliminarArchivo(conductor.getFotoUrl());
         }
 
-        //SUBIMOS LA FOTO
-        String fotoUrl = archivoService.subir(foto);
-        conductor.setFotoUrl(fotoUrl);
+        //GUARDAMOS EN LA BASE DE DATOS
+        conductor.setFotoUrl(fotoKey);
         conductorRepository.save(conductor);
-        return fotoUrl;
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public ArchivoContenido obtenerFoto(Long id) {
+    public String obtenerURLFoto(Long id) {
         Conductor conductor = conductorRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Conductor con ID: " + id + " no encontrado"));
-        if (conductor.getFotoUrl() == null) {
-            throw new NotFoundException("El conductor con ID: " + id + " no tiene una fotografía registrada");
+                .orElseThrow(() -> new NotFoundException("Conductor con ID " + id + " no encontrado"));
+
+        String key = conductor.getFotoUrl();
+
+        if (key == null || key.isBlank()) {
+            throw new NotFoundException(
+                    "El conductor no tiene foto"
+            );
         }
-        return archivoService.leerFoto(conductor.getFotoUrl());
+
+        return archivoService.obtenerUrlTemporal(key).toString();
     }
 
     private void validarFoto(MultipartFile archivo) {
