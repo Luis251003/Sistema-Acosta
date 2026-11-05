@@ -1,5 +1,6 @@
 package com.upc.acosta.app.entity;
 
+import com.upc.acosta.app.entity.tipos.RolFlota;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;

@@ -1,6 +1,6 @@
 package com.upc.acosta.app.dto;
 
-import com.upc.acosta.app.entity.TipoVehiculo;
+import com.upc.acosta.app.entity.tipos.TipoVehiculo;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;

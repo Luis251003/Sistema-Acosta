@@ -3,7 +3,7 @@ package com.upc.acosta.app.service;
 import com.upc.acosta.app.dto.CamionDTORequest;
 import com.upc.acosta.app.dto.CamionDTOResponse;
 import com.upc.acosta.app.dto.TipoDocumentoDTOResponse;
-import com.upc.acosta.app.entity.TipoVehiculo;
+import com.upc.acosta.app.entity.tipos.TipoVehiculo;
 
 import java.util.List;
 import java.util.Set;

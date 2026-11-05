@@ -2,7 +2,7 @@ package com.upc.acosta.app.service;
 
 import com.upc.acosta.app.dto.DocumentoDTORequest;
 import com.upc.acosta.app.dto.DocumentoDTOResponse;
-import com.upc.acosta.app.entity.RolDocumento;
+import com.upc.acosta.app.entity.tipos.RolDocumento;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;

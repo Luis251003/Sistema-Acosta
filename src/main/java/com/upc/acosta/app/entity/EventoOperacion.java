@@ -1,5 +1,6 @@
 package com.upc.acosta.app.entity;
 
+import com.upc.acosta.app.entity.tipos.TipoEvento;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

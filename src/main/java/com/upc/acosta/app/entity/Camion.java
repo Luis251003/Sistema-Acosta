@@ -1,19 +1,14 @@
 package com.upc.acosta.app.entity;
 
+import com.upc.acosta.app.entity.tipos.EstadoCamion;
+import com.upc.acosta.app.entity.tipos.TipoVehiculo;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Digits;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Objects;
 
 @Getter
@@ -26,43 +21,29 @@ public class Camion {
     @Column(name = "id_camion")
     private Long id;
 
-    @NotBlank
-    @Size(max = 10)
     @Column(nullable = false, unique = true, length = 10)
     private String placa;
 
-    @NotBlank
-    @Size(max = 50)
     @Column(nullable = false, length = 50)
     private String marca;
 
-    @NotBlank
-    @Size(max = 50)
     @Column(nullable = false, length = 50)
     private String modelo;
 
-    @NotNull
-    @DecimalMin("0.01")
-    @Digits(integer = 8, fraction = 2)
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal capacidad;
 
-    @NotBlank
-    @Size(max = 30)
     @Column(name = "numero_tuce", nullable = false, unique = true, length = 30)
     private String numeroTuce;
 
-    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_vehiculo", nullable = false, length = 20)
     private TipoVehiculo tipoVehiculo;
 
-    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private EstadoCamion estado = EstadoCamion.INHABILITADO;
 
-    @NotNull
     @Column(nullable = false)
     private Boolean activo = true;
 
@@ -92,20 +73,6 @@ public class Camion {
     @PreUpdate
     private void configurarAntesDeActualizar() {
         this.updatedAt = LocalDateTime.now();
-    }
-
-    //METODO PARA EVALUAR ESTADO DEL CAMION
-    public Boolean evaluarEstadoCamion(List<TipoDocumento> tiposObligatorios,
-                                       List<Documento> documentosCamion,
-                                       LocalDate fechaConsulta){
-        return tiposObligatorios.stream().allMatch(tipo ->
-                documentosCamion.stream().anyMatch(documento ->
-                        documento.getTipoDocumento().getRol().equals(tipo.getRol())
-                                && documento.getFechaVencimiento() != null
-                                && !documento.getFechaVencimiento()
-                                .isBefore(fechaConsulta)
-                )
-        );
     }
 
     @Override
