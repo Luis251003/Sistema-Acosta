@@ -60,14 +60,14 @@ public class Operacion {
     @Column(name = "timestamp_recojo_programado", nullable = false)
     private LocalDateTime recojoProgramado;
 
-    @Column(name = "timestamp_entrega_programada", nullable = false)
+    @Column(name = "timestamp_entrega_programada")
     private LocalDateTime entregaProgramado;
 
     @Column(name = "token_seguimiento", unique = true,
             nullable = false, length = 36)
     private String tokenSeguimiento;
 
-    @Column(nullable = false)
+    @Column
     private String observacion;
 
     @Column(nullable = false, length = 30)

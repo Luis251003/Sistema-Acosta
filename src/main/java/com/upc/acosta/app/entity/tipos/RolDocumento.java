@@ -1,4 +1,4 @@
-package com.upc.acosta.app.entity;
+package com.upc.acosta.app.entity.tipos;
 
 public enum RolDocumento {
     CONDUCTOR,

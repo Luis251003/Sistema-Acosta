@@ -1,8 +1,8 @@
 package com.upc.acosta.app.controller;
 
 import com.upc.acosta.app.dto.*;
-import com.upc.acosta.app.entity.RolDocumento;
-import com.upc.acosta.app.entity.TipoConductor;
+import com.upc.acosta.app.entity.tipos.RolDocumento;
+import com.upc.acosta.app.entity.tipos.TipoConductor;
 import com.upc.acosta.app.service.IConductorService;
 import com.upc.acosta.app.service.IDocumentoService;
 import jakarta.validation.Valid;

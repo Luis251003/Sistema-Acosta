@@ -2,7 +2,7 @@ package com.upc.acosta.app.specification;
 
 import com.upc.acosta.app.entity.Conductor;
 import com.upc.acosta.app.entity.Empleado;
-import com.upc.acosta.app.entity.TipoConductor;
+import com.upc.acosta.app.entity.tipos.TipoConductor;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;

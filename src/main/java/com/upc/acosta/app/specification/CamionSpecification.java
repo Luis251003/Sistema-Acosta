@@ -1,7 +1,7 @@
 package com.upc.acosta.app.specification;
 
 import com.upc.acosta.app.entity.Camion;
-import com.upc.acosta.app.entity.TipoVehiculo;
+import com.upc.acosta.app.entity.tipos.TipoVehiculo;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 

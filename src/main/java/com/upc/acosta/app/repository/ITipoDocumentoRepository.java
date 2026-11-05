@@ -1,6 +1,6 @@
 package com.upc.acosta.app.repository;
 
-import com.upc.acosta.app.entity.RolDocumento;
+import com.upc.acosta.app.entity.tipos.RolDocumento;
 import com.upc.acosta.app.entity.TipoDocumento;
 import org.springframework.data.jpa.repository.JpaRepository;
 

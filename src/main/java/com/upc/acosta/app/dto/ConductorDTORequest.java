@@ -1,6 +1,6 @@
 package com.upc.acosta.app.dto;
 
-import com.upc.acosta.app.entity.TipoConductor;
+import com.upc.acosta.app.entity.tipos.TipoConductor;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;

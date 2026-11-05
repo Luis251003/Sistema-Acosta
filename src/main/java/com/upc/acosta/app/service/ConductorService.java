@@ -4,6 +4,8 @@ import com.upc.acosta.app.dto.ConductorDTORequest;
 import com.upc.acosta.app.dto.ConductorDTOResponse;
 import com.upc.acosta.app.dto.TipoDocumentoDTOResponse;
 import com.upc.acosta.app.entity.*;
+import com.upc.acosta.app.entity.tipos.RolDocumento;
+import com.upc.acosta.app.entity.tipos.TipoConductor;
 import com.upc.acosta.app.error.BadRequestException;
 import com.upc.acosta.app.error.DataExistException;
 import com.upc.acosta.app.error.NotFoundException;

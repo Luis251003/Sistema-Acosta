@@ -1,6 +1,6 @@
 package com.upc.acosta.app.dto;
 
-import com.upc.acosta.app.entity.TipoConductor;
+import com.upc.acosta.app.entity.tipos.TipoConductor;
 
 public record ConductorDTOResponse(
         Long id,

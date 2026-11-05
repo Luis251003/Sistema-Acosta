@@ -3,8 +3,7 @@ package com.upc.acosta.app.service;
 import com.upc.acosta.app.dto.ConductorDTORequest;
 import com.upc.acosta.app.dto.ConductorDTOResponse;
 import com.upc.acosta.app.dto.TipoDocumentoDTOResponse;
-import com.upc.acosta.app.entity.TipoConductor;
-import com.upc.acosta.app.entity.TipoDocumento;
+import com.upc.acosta.app.entity.tipos.TipoConductor;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;

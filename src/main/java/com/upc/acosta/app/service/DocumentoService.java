@@ -3,6 +3,8 @@ package com.upc.acosta.app.service;
 import com.upc.acosta.app.dto.DocumentoDTORequest;
 import com.upc.acosta.app.dto.DocumentoDTOResponse;
 import com.upc.acosta.app.entity.*;
+import com.upc.acosta.app.entity.tipos.EstadoCamion;
+import com.upc.acosta.app.entity.tipos.RolDocumento;
 import com.upc.acosta.app.error.BadRequestException;
 import com.upc.acosta.app.error.NotFoundException;
 import com.upc.acosta.app.repository.*;
