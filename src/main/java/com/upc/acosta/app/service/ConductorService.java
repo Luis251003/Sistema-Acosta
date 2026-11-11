@@ -2,6 +2,7 @@ package com.upc.acosta.app.service;
 
 import com.upc.acosta.app.dto.ConductorDTORequest;
 import com.upc.acosta.app.dto.ConductorDTOResponse;
+import com.upc.acosta.app.dto.ConductorSeleccionadoDTOResponse;
 import com.upc.acosta.app.dto.TipoDocumentoDTOResponse;
 import com.upc.acosta.app.entity.*;
 import com.upc.acosta.app.entity.tipos.RolDocumento;
@@ -11,41 +12,39 @@ import com.upc.acosta.app.error.DataExistException;
 import com.upc.acosta.app.error.NotFoundException;
 import com.upc.acosta.app.repository.IConductorRepository;
 import com.upc.acosta.app.repository.IEmpleadoRepository;
+import com.upc.acosta.app.repository.IFlotaRepository;
+import com.upc.acosta.app.repository.IOperacionRepository;
 import com.upc.acosta.app.repository.ITipoDocumentoRepository;
+import com.upc.acosta.app.service.interfaces.IArchivoService;
+import com.upc.acosta.app.service.interfaces.IConductorService;
+import com.upc.acosta.app.service.interfaces.IDocumentoService;
 import com.upc.acosta.app.specification.ConductorSpecification;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
-public class ConductorService implements IConductorService{
+@RequiredArgsConstructor
+public class ConductorService implements IConductorService {
 
     //REPOSITORIOS
     private final IConductorRepository conductorRepository;
     private final IEmpleadoRepository personaRepository;
+    private final IOperacionRepository operacionRepository;
+    private final IFlotaRepository flotaRepository;
 
     //SERVICIOS
     private final ITipoDocumentoRepository iTipoDocumentoRepository;
     private final IArchivoService archivoService;
-
-    //METODO CONSTRUCTOR
-    public ConductorService(
-            IConductorRepository conductorRepository,
-            IEmpleadoRepository personaRepository,
-            ITipoDocumentoRepository iTipoDocumentoRepository,
-            IArchivoService archivoService
-    ) {
-        this.conductorRepository = conductorRepository;
-        this.personaRepository = personaRepository;
-        this.iTipoDocumentoRepository = iTipoDocumentoRepository;
-        this.archivoService = archivoService;
-    }
+    private final IDocumentoService documentoService;
 
     //METODO DE MAPEO
     private ConductorDTOResponse entityToResponse(Conductor bean){
@@ -62,7 +61,22 @@ public class ConductorService implements IConductorService{
                 bean.getBrevete(),
                 bean.getFotoUrl(),
                 bean.getTipoConductor(),
-                bean.getEstado()
+                bean.getHabilitado()
+        );
+    }
+
+    private ConductorSeleccionadoDTOResponse conductorSeleccionadoToResponse(ConductorDTOResponse datos,boolean disponible){
+        return new ConductorSeleccionadoDTOResponse(
+                datos.id(),
+                datos.nombre(),
+                datos.apellido(),
+                datos.telefono(),
+                datos.dni(),
+                datos.brevete(),
+                datos.fotoUrl(),
+                datos.tipoConductor(),
+                datos.habilitado(),
+                disponible
         );
     }
 
@@ -82,12 +96,6 @@ public class ConductorService implements IConductorService{
                 .stream()
                 .map(this::entityToResponse)
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<TipoConductor> listarTipos() {
-        return List.of(TipoConductor.values());
     }
 
     @Override
@@ -154,16 +162,7 @@ public class ConductorService implements IConductorService{
         return entityToResponse(conductorRepository.save(conductor));
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<ConductorDTOResponse> buscarXNombreOBrevete(String texto) {
-        //BUSCAR CONDUCTOR X NOMBRE O BREVETE
-        return conductorRepository
-                .findByEmpleadoNombreContainingIgnoreCaseOrEmpleadoApellidoContainingIgnoreCaseOrBreveteContainingIgnoreCase(texto,texto,texto)
-                .stream()
-                .map(this::entityToResponse)
-                .collect(Collectors.toList());
-    }
+
 
     @Override
     @Transactional
@@ -174,6 +173,31 @@ public class ConductorService implements IConductorService{
         bean.setActivo(false);
         conductorRepository.save(bean);
     }
+
+    // SERVICIOS DE BUSQUEDA
+
+    @Override
+    public ConductorSeleccionadoDTOResponse buscarXIdAndDisponibilidad(Long id, Long idOperacion) {
+        //Actualizamos el estado de habilitacion del conductor
+        documentoService.actualizarEstadosDocumentos(id,RolDocumento.CONDUCTOR);
+        //Obtenemos el conductor actualizado
+        Conductor conductor = conductorRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Conductor con ID: " + id + " no encontrado"));
+        return buscarDisponibilidad(conductor,idOperacion);
+    }
+
+    @Override
+    public ConductorSeleccionadoDTOResponse buscarXBreveteAndDisponibilidad(String brevete, Long idOperacion) {
+
+        Conductor conductor = conductorRepository.findByBrevete(brevete.trim())
+                .orElseThrow(() -> new NotFoundException("Conductor con brevete: " + brevete + " no encontrado"));
+        documentoService.actualizarEstadosDocumentos(conductor.getId(), RolDocumento.CONDUCTOR);
+        Conductor conductorSaved = conductorRepository.findById(conductor.getId())
+                .orElseThrow(() -> new NotFoundException("Conductor con ID: " + conductor.getId() + " no encontrado"));
+        return buscarDisponibilidad(conductorSaved,idOperacion);
+    }
+
+    // SERVICIOS DE FOTO
 
     @Override
     @Transactional
@@ -211,6 +235,28 @@ public class ConductorService implements IConductorService{
         }
 
         return archivoService.obtenerUrlTemporal(key).toString();
+    }
+
+    private ConductorSeleccionadoDTOResponse buscarDisponibilidad(Conductor conductor,Long idOperacion){
+
+        Operacion operacion = operacionRepository.findById(idOperacion)
+                .orElseThrow(() -> new NotFoundException("Operación con ID: " + idOperacion + " no encontrada"));
+
+        LocalDate fechaRecojo = operacion.getFechaRecojoProgramado();
+        if (fechaRecojo == null) {
+            throw new BadRequestException(
+                    "La operación con ID: " + idOperacion + " no tiene una fecha de entrega programada"
+            );
+        }
+
+        boolean disponible = !flotaRepository.existsAsignacionConductorEnFecha(
+                        conductor.getId(),
+                        fechaRecojo,
+                        operacion.getId()
+                );
+        ConductorDTOResponse datos = entityToResponse(conductor);
+        return conductorSeleccionadoToResponse(datos,disponible);
+
     }
 
     private void validarFoto(MultipartFile archivo) {

@@ -35,6 +35,22 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errores);
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<?> IllegalStateException(IllegalStateException exc){
+        Map<String,String> error = new HashMap<>();
+        error.put("error","Error de ingreso ilegal de datos");
+        error.put("message",exc.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> IllegalArgumentException(IllegalArgumentException exc){
+        Map<String,String> error = new HashMap<>();
+        error.put("error","Error de ingreso ilegal de datos");
+        error.put("message",exc.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<?> BadRequestException(BadRequestException exc){
         Map<String,String> error = new HashMap<>();

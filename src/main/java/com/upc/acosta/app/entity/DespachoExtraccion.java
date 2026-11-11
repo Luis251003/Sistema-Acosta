@@ -8,10 +8,11 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-@Entity(name = "tb_despachos_extracciones")
+@Entity
 @Getter
 @Setter
 @NoArgsConstructor
+@Table(name = "tb_despachos_extracciones")
 public class DespachoExtraccion {
 
     @Id

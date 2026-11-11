@@ -1,48 +1,62 @@
 package com.upc.acosta.app.service;
 
+import com.upc.acosta.app.dto.UbigeoDTOResponse;
+import com.upc.acosta.app.entity.UbigeoDepartamento;
+import com.upc.acosta.app.repository.IUbigeoDepartamentoRepository;
+import com.upc.acosta.app.repository.IUbigeoDistritoRepository;
+import com.upc.acosta.app.repository.IUbigeoProvinciaRepository;
+import com.upc.acosta.app.service.interfaces.IUbigeoService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
-public class UbigeoService {
-//    private static final Pattern CODIGO_DEPARTAMENTO = Pattern.compile("\\d{2}");
-//    private static final Pattern CODIGO_PROVINCIA = Pattern.compile("\\d{4}");
-//
-//    private final IUbigeoRepository ubigeoRepository;
-//
-//    public UbigeoService(IUbigeoRepository ubigeoRepository) {
-//        this.ubigeoRepository = ubigeoRepository;
-//    }
-//
-//    @Override
-//    @Cacheable("ubigeo-departamentos")
-//    public List<UbigeoDTOResponse> listarDepartamentos() {
-//        return ordenarPorNombre(ubigeoRepository.findDepartamentos());
-//    }
-//
-//    @Override
-//    @Cacheable(cacheNames = "ubigeo-provincias", key = "#codigoDepartamento")
-//    public List<UbigeoDTOResponse> listarProvincias(String codigoDepartamento) {
-//        validarCodigo(codigoDepartamento, CODIGO_DEPARTAMENTO, "El código de departamento debe tener 2 dígitos numéricos");
-//        return ordenarPorNombre(ubigeoRepository.findProvincias(codigoDepartamento));
-//    }
-//
-//    @Override
-//    @Cacheable(cacheNames = "ubigeo-distritos", key = "#codigoProvincia")
-//    public List<UbigeoDTOResponse> listarDistritos(String codigoProvincia) {
-//        validarCodigo(codigoProvincia, CODIGO_PROVINCIA, "El código de provincia debe tener 4 dígitos numéricos");
-//        return ordenarPorNombre(ubigeoRepository.findDistritos(codigoProvincia));
-//    }
-//
-//    private void validarCodigo(String codigo, Pattern formato, String mensaje) {
-//        if (codigo == null || !formato.matcher(codigo).matches()) {
-//            throw new BadRequestException(mensaje);
-//        }
-//    }
-//
-//    private List<UbigeoDTOResponse> ordenarPorNombre(List<UbigeoDTOResponse> opciones) {
-//        return opciones.stream()
-//                .sorted(Comparator.comparing(UbigeoDTOResponse::nombre, String.CASE_INSENSITIVE_ORDER)
-//                        .thenComparing(UbigeoDTOResponse::codigo))
-//                .toList();
-//    }
+public class UbigeoService implements IUbigeoService {
+
+    //Obtenemos el repositorio
+    private final IUbigeoDepartamentoRepository ubigeoDepartamentoRepository;
+    private final IUbigeoProvinciaRepository ubigeoProvinciaRepository;
+    private final IUbigeoDistritoRepository ubigeoDistritoRepository;
+
+    //Metodo constructor
+    public UbigeoService(IUbigeoDepartamentoRepository ubigeoRepository, IUbigeoProvinciaRepository ubigeoProvinciaRepository, IUbigeoDistritoRepository ubigeoDistritoRepository) {
+        this.ubigeoDepartamentoRepository = ubigeoRepository;
+        this.ubigeoProvinciaRepository = ubigeoProvinciaRepository;
+        this.ubigeoDistritoRepository = ubigeoDistritoRepository;
+    }
+
+    //Metodo para mapear los departamentos
+    public UbigeoDTOResponse mapearDepartamento(UbigeoDepartamento departamento) {
+        return new UbigeoDTOResponse(
+                departamento.getId(),
+                departamento.getDepartamento(),
+                departamento.getUbigeo()
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UbigeoDTOResponse> listarDepartamentos() {
+        return ubigeoDepartamentoRepository.findAll().stream()
+                .map(this::mapearDepartamento)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UbigeoDTOResponse> listarProvincias(Long idDepartamento) {
+        return ubigeoProvinciaRepository.findByUbigeoDepartamentoId(idDepartamento).stream()
+                .map(provincia -> new UbigeoDTOResponse(provincia.getId(), provincia.getProvincia(), provincia.getUbigeo()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UbigeoDTOResponse> listarDistritos(Long idProvincia) {
+        return ubigeoDistritoRepository.findByUbigeoProvinciaId(idProvincia).stream()
+                .map(distrito -> new UbigeoDTOResponse(distrito.getId(), distrito.getDistrito(),distrito.getUbigeo()))
+                .collect(Collectors.toList());
+    }
 }

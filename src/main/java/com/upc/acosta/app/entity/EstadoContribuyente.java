@@ -10,7 +10,8 @@ import java.util.Objects;
 @Getter
 @Setter
 @NoArgsConstructor
-@Entity(name = "tb_estado_contribuyente")
+@Entity
+@Table(name = "tb_estado_contribuyente")
 public class EstadoContribuyente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

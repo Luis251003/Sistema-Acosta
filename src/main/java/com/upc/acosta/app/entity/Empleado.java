@@ -8,10 +8,11 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-@Entity(name = "tb_empleados")
+@Entity
 @Getter
 @Setter
 @NoArgsConstructor
+@Table(name = "tb_empleados")
 public class Empleado {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

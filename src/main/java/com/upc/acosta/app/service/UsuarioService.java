@@ -4,11 +4,12 @@ import com.upc.acosta.app.dto.UsuarioDTOResponse;
 import com.upc.acosta.app.entity.Usuario;
 import com.upc.acosta.app.error.NotFoundException;
 import com.upc.acosta.app.repository.IUsuarioRepository;
+import com.upc.acosta.app.service.interfaces.IUsuarioService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class UsuarioService implements IUsuarioService{
+public class UsuarioService implements IUsuarioService {
 
     //REPOSITORIO
     private final IUsuarioRepository usuarioRepository;

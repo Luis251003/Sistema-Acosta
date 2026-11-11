@@ -8,6 +8,7 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -15,6 +16,11 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+//import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+//import org.springframework.security.oauth2.core.OAuth2Error;
+//import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+//import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
+import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.cors.CorsConfiguration;
@@ -24,6 +30,7 @@ import org.springframework.web.filter.CorsFilter;
 
 import javax.crypto.SecretKey;
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 public class SpringSecurityConfig {
@@ -54,7 +61,19 @@ public class SpringSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+//    @Bean
+//    @Order(1)
+//    SecurityFilterChain internalChain(HttpSecurity http, JwtDecoder googleJwtDecoder) {
+//        http.securityMatcher("/internal/**")
+//                .authorizeHttpRequests(a -> a.anyRequest().authenticated())
+//                .oauth2ResourceServer(o -> o.jwt(j -> j.decoder(googleJwtDecoder)))
+//                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+//                .csrf(AbstractHttpConfigurer::disable);
+//        return http.build();
+//    }
+
     @Bean
+    @Order(2)
     SecurityFilterChain filterChain(HttpSecurity httpSecurity,SecretKey secretKey){
         return httpSecurity
         .addFilter(new JwtAuthenticationFilter(authenticationConfiguration.getAuthenticationManager(),jwtExpiration,secretKey))
@@ -65,7 +84,8 @@ public class SpringSecurityConfig {
                 // Solo ADMIN y OPERADOR
                 .requestMatchers("/api/usuario/**")
                 .hasAnyRole("ADMIN", "OPERADOR")
-
+                .requestMatchers("/api/ruc/**")
+                .hasAnyRole("ADMIN", "OPERADOR")
                 .requestMatchers("/api/cliente/**")
                 .hasAnyRole("ADMIN", "OPERADOR")
 
@@ -79,7 +99,7 @@ public class SpringSecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource(){
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(Arrays.asList("*"));
+        config.setAllowedOriginPatterns(List.of("*"));
         config.setAllowedMethods(Arrays.asList("GET","POST","DELETE","PUT"));
         config.setAllowedHeaders(Arrays.asList("Authorization","Content-Type"));
         config.setAllowCredentials(true);
@@ -95,4 +115,30 @@ public class SpringSecurityConfig {
         corsBean.setOrder(Ordered.HIGHEST_PRECEDENCE);
         return corsBean;
     }
+
+//    @Bean
+//    JwtDecoder googleJwtDecoder(
+//            @Value("${internal.audience}") String audienciaEsperada,
+//            @Value("${internal.scheduler-email}") String emailEsperado) {
+//
+//        NimbusJwtDecoder decoder = NimbusJwtDecoder
+//                .withJwkSetUri("https://www.googleapis.com/oauth2/v3/certs").build();
+//
+//        // Valida firma de emisor, exp y nbf
+//        OAuth2TokenValidator<Jwt> base =
+//                JwtValidators.createDefaultWithIssuer("https://accounts.google.com");
+//
+//        OAuth2TokenValidator<Jwt> audience = jwt ->
+//                jwt.getAudience() != null && jwt.getAudience().contains(audienciaEsperada)
+//                        ? OAuth2TokenValidatorResult.success()
+//                        : OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_audience"));
+//
+//        OAuth2TokenValidator<Jwt> emisor = jwt ->
+//                emailEsperado.equals(jwt.getClaimAsString("email"))
+//                        ? OAuth2TokenValidatorResult.success()
+//                        : OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_sender"));
+//
+//        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(base, audience, emisor));
+//        return decoder;
+//    }
 }

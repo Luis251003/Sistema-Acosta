@@ -1,6 +1,5 @@
 package com.upc.acosta.app.entity;
 
-import com.upc.acosta.app.entity.tipos.EstadoCamion;
 import com.upc.acosta.app.entity.tipos.TipoVehiculo;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -14,7 +13,8 @@ import java.util.Objects;
 @Getter
 @Setter
 @NoArgsConstructor
-@Entity(name = "tb_camiones")
+@Entity
+@Table(name = "tb_camiones")
 public class Camion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,9 +40,8 @@ public class Camion {
     @Column(name = "tipo_vehiculo", nullable = false, length = 20)
     private TipoVehiculo tipoVehiculo;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private EstadoCamion estado = EstadoCamion.INHABILITADO;
+    @Column(nullable = false)
+    private boolean habilitado = false;
 
     @Column(nullable = false)
     private Boolean activo = true;

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface IDocumentosCamionRepository extends JpaRepository<DocumentoCamion, Long> {
-    Optional<List<DocumentoCamion>> findByCamionId(Long camionId);
+    List<DocumentoCamion> findByCamionId(Long camionId);
     Optional<DocumentoCamion> findByIdAndCamionId(Long id, Long camionId);
+    boolean existsByCamionIdAndTipoDocumentoIdTipoDocumento(Long idEntidad, Long idTipoDocumento);
 }

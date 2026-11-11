@@ -10,6 +10,7 @@ import com.upc.acosta.app.error.NotFoundException;
 import com.upc.acosta.app.repository.IClienteRepository;
 import com.upc.acosta.app.repository.ICondicionContribuyenteRepository;
 import com.upc.acosta.app.repository.IEstadoContribuyenteRepository;
+import com.upc.acosta.app.service.interfaces.IClienteService;
 import com.upc.acosta.app.validator.RucValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class ClienteService implements IClienteService{
+public class ClienteService implements IClienteService {
 
     //REPOSITORIO
     private final IClienteRepository clienteRepository;
@@ -36,7 +37,8 @@ public class ClienteService implements IClienteService{
     }
 
     //METODOS DE CONVERSION
-    private ClienteDTOResponse entityToResponse(Cliente bean){
+    @Override
+    public ClienteDTOResponse entityToResponse(Cliente bean){
         return new ClienteDTOResponse(
                 bean.getId(),
                 bean.getRazonSocial(),
@@ -72,6 +74,12 @@ public class ClienteService implements IClienteService{
     @Transactional(readOnly = true)
     public ClienteDTOResponse buscarXId(Long id) {
         return clienteRepository.findById(id).map(this::entityToResponse).orElseThrow(()->new NotFoundException("Error al encontrar el cliente"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ClienteDTOResponse buscarXRuc(String ruc) {
+        return clienteRepository.findByRuc(ruc).map(this::entityToResponse).orElseThrow(()->new NotFoundException("No hemos podido encontrar al usuario"));
     }
 
     @Override

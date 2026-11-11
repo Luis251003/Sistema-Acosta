@@ -11,6 +11,6 @@ public record ConductorDTOResponse(
         String brevete,
         String fotoUrl,
         TipoConductor tipoConductor,
-        Boolean estado
+        Boolean habilitado
 ) {
 }

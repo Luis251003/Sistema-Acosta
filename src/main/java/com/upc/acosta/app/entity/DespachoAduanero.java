@@ -9,12 +9,14 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Objects;
 
-@Entity(name = "tb_despachos_aduaneros")
+@Entity
 @Getter
 @Setter
 @NoArgsConstructor
+@Table(name = "tb_despachos_aduaneros")
 public class DespachoAduanero {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,6 +48,13 @@ public class DespachoAduanero {
     @JoinColumn(name = "cod_linea_naviera")
     private LineaNaviera lineaNaviera;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_agencia_aduana", nullable = false)
+    private AgenciaAduanas agenciaAduanas;
+
+    @Column(name = "hora_recojo_programado")
+    private LocalTime horaRecojoProgramado;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -54,13 +63,14 @@ public class DespachoAduanero {
 
 
     //METODO CONSTRUCTOR
-    public DespachoAduanero(Canal canal, Modalidad modalidad, String numeroContenedor, BigDecimal peso, Operacion operacion, LineaNaviera lineaNaviera) {
+    public DespachoAduanero(Canal canal, Modalidad modalidad, String numeroContenedor, BigDecimal peso, Operacion operacion, LineaNaviera lineaNaviera, AgenciaAduanas agenciaAduanas) {
         this.canal = canal;
         this.modalidad = modalidad;
         this.numeroContenedor = numeroContenedor;
         this.peso = peso;
         this.operacion = operacion;
         this.lineaNaviera = lineaNaviera;
+        this.agenciaAduanas = agenciaAduanas;
     }
 
     @PrePersist

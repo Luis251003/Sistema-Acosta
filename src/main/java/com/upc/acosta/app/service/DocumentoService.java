@@ -2,50 +2,48 @@ package com.upc.acosta.app.service;
 
 import com.upc.acosta.app.dto.DocumentoDTORequest;
 import com.upc.acosta.app.dto.DocumentoDTOResponse;
+import com.upc.acosta.app.dto.ResultadoActualizacion;
 import com.upc.acosta.app.entity.*;
-import com.upc.acosta.app.entity.tipos.EstadoCamion;
 import com.upc.acosta.app.entity.tipos.RolDocumento;
 import com.upc.acosta.app.error.BadRequestException;
 import com.upc.acosta.app.error.NotFoundException;
 import com.upc.acosta.app.repository.*;
+import com.upc.acosta.app.service.interfaces.IArchivoService;
+import com.upc.acosta.app.service.interfaces.IDocumentoHandler;
+import com.upc.acosta.app.service.interfaces.IDocumentoService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import com.upc.acosta.app.entity.Documento;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class DocumentoService implements IDocumentoService {
 
     //REPOSITORIOS
-    private final IDocumentosCamionRepository documentosCamionRepository;
-    private final IDocumentosConductorRepository documentosConductorRepository;
-    private final ICamionRepository camionRepository;
-    private final IConductorRepository conductorRepository;
+    private final Map<RolDocumento, IDocumentoHandler> handlers;
     private final ITipoDocumentoRepository tipoDocumentoRepository;
     private final IArchivoService archivoService;
+    private final TransactionTemplate transactionTemplate;
 
-    //METODO CONSTRUCTOR
-    public DocumentoService(
-            IDocumentosCamionRepository documentosCamionRepository,
-            IDocumentosConductorRepository documentosConductorRepository,
-            ICamionRepository camionRepository,
-            IConductorRepository conductorRepository,
-            ITipoDocumentoRepository tipoDocumentoRepository,
-            IArchivoService archivoService
-    ) {
-        this.documentosCamionRepository = documentosCamionRepository;
-        this.documentosConductorRepository = documentosConductorRepository;
-        this.camionRepository = camionRepository;
-        this.conductorRepository = conductorRepository;
+    public DocumentoService(List<IDocumentoHandler> handlers,
+                            ITipoDocumentoRepository tipoDocumentoRepository,
+                            IArchivoService archivoService, TransactionTemplate transactionTemplate) {
+        this.handlers = handlers.stream()
+                .collect(Collectors.toMap(IDocumentoHandler::rol, Function.identity()));
         this.tipoDocumentoRepository = tipoDocumentoRepository;
         this.archivoService = archivoService;
+        this.transactionTemplate = transactionTemplate;
     }
-
-    //METODO DE MAPEO
+    // METODO DE MAPEO
     private DocumentoDTOResponse entityToResponse(Documento documento) {
         return new DocumentoDTOResponse(
                 documento.getId(),
@@ -60,273 +58,25 @@ public class DocumentoService implements IDocumentoService {
         );
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<DocumentoDTOResponse> listarDocumentos(Long id, RolDocumento rol) {
+    // ::::::::::::::::::::::::::::::: OBTENER INTERFACE SEGUN ROL :::::::::::::::::::::::::::::::
 
-        return switch (rol) {
-            case RolDocumento.CAMION -> documentosCamionRepository
-                    .findByCamionId(id)
-                    .orElseThrow(() -> new NotFoundException("Camión con ID: " + id + " no encontrado"))
-                    .stream().map(this::entityToResponse).toList();
-            case RolDocumento.CONDUCTOR -> documentosConductorRepository
-                    .findByConductorId(id)
-                    .orElseThrow(() -> new NotFoundException("Conductor con ID: " + id + " no encontrado"))
-                    .stream().map(this::entityToResponse).toList();
-            default -> throw new BadRequestException("Rol no válido");
-        };
+    private IDocumentoHandler handler(RolDocumento rol) {
+        IDocumentoHandler h = handlers.get(rol);
+        if (h == null) throw new BadRequestException("Rol no válido");
+        return h;
     }
 
-    public String obtenerArchivoURL(Long idEntidad, Long idDocumento, RolDocumento rol) {
+    // ::::::::::::::::::::::::::::::: METODOS DE VALIDACION :::::::::::::::::::::::::::::::
 
-        Documento documento;
-        String key = "";
-
-        switch (rol) {
-            case RolDocumento.CAMION:
-                documento = documentosCamionRepository.findByIdAndCamionId(idDocumento, idEntidad).orElseThrow(() -> new NotFoundException("Documento con ID " + idDocumento + " no encontrado para el camión con ID " + idEntidad));
-                key = documento.getRutaArchivo();
-                return archivoService.obtenerUrlTemporal(key).toString();
-            case RolDocumento.CONDUCTOR:
-                documento = documentosConductorRepository.findByIdAndConductorId(idDocumento, idEntidad).orElseThrow(() -> new NotFoundException("Documento con ID " + idDocumento + " no encontrado para el conductor con ID " + idEntidad));
-                key = documento.getRutaArchivo();
-                return archivoService.obtenerUrlTemporal(key).toString();
-        }
-
-        return archivoService.obtenerUrlTemporal(key).toString();
-    }
-
-    @Override
-    public DocumentoDTOResponse registrarDocumento(
-            Long id,
-            DocumentoDTORequest request,
-            MultipartFile archivo,
-            RolDocumento rol
-    ) {
-
-        //VALIDAMOS LAS FECHAS DE EMISION Y VENCIMIENTO
+    private TipoDocumento validarSolicitud(DocumentoDTORequest request, RolDocumento rol) {
         validarFechas(request);
-        //OBTENEMOS EL TIPO DE DOCUMENTO
-        TipoDocumento tipoDocumento = obtenerTipoDocumento(request.idTipoDocumento());
-        //VALIDAMOS QUE EL TIPO DE DOCUMENTO CORRESPONDA AL ROL ASIGNADO
-        if (tipoDocumento.getRol() != rol) {
+        TipoDocumento tipo = tipoDocumentoRepository.findById(request.idTipoDocumento())
+                .orElseThrow(() -> new NotFoundException(
+                        "Tipo de documento con ID: " + request.idTipoDocumento() + " no encontrado"));
+        if (tipo.getRol() != rol) {
             throw new BadRequestException("El tipo de documento no corresponde al rol asignado");
         }
-
-        //ELEGIMOS A QUE TIPO DE ROL PERTENECE EL DOCUMENTO
-        return switch (rol) {
-            case RolDocumento.CAMION -> registrarDocumentoCamion(id, request, tipoDocumento, archivo);
-            case RolDocumento.CONDUCTOR -> registrarDocumentoConductor(id, request, tipoDocumento, archivo);
-            default -> throw new BadRequestException("Rol no válido");
-        };
-    }
-
-    @Override
-    @Transactional
-    public DocumentoDTOResponse actualizarDocumento(
-            Long idEntidad,
-            Long idDocumento,
-            DocumentoDTORequest request,
-            MultipartFile archivo,
-            RolDocumento rol
-    ) {
-        //VALIDAMOS LAS FECHAS DE EMISION Y VENCIMIENTO
-        validarFechas(request);
-        //OBTENEMOS EL TIPO DE DOCUMENTO
-        TipoDocumento tipoDocumento = obtenerTipoDocumento(request.idTipoDocumento());
-        //VALIDAMOS QUE EL TIPO DE DOCUMENTO CORRESPONDA AL ROL ASIGNADO
-        if (tipoDocumento.getRol() != rol) {
-            throw new BadRequestException("El tipo de documento no corresponde al rol asignado");
-        }
-
-        //ELEGIMOS A QUE TIPO DE ROL PERTENECE EL DOCUMENTO
-        return switch (rol) {
-            case RolDocumento.CAMION -> actualizarDocumentoCamion(idEntidad, idDocumento, request, archivo);
-            case RolDocumento.CONDUCTOR -> actualizarDocumentoConductor(idEntidad, idDocumento, request, archivo);
-            default -> throw new BadRequestException("Rol no válido");
-        };
-    }
-
-    @Transactional
-    private DocumentoDTOResponse actualizarDocumentoConductor(Long idConductor, Long idDocumento, DocumentoDTORequest request, MultipartFile archivo) {
-        //OBTENEMOS AL CONDUCTOR
-        Conductor conductor = obtenerConductor(idConductor);
-        //OBTENEMOS EL DOCUMENTO DEL CONDUCTOR
-        DocumentoConductor documento = obtenerDocumentoConductor(idConductor, idDocumento);
-
-        //GUARDAMOS LA RUTA ANTERIOR
-        String rutaAnterior = null;
-        if (archivo != null && !archivo.isEmpty()) {
-            rutaAnterior = documento.getRutaArchivo();
-            //SUBIMOS EL ARCHIVO NUEVO
-            documento.setRutaArchivo(archivoService.subirDocumento(archivo,"conductor"));
-        }
-
-        //ACTUALIZAMOS LOS DATOS DEL ARCHIVO
-        documento.setNombre(request.nombre().trim());
-        documento.setFechaEmision(request.fechaEmision());
-        documento.setFechaVencimiento(request.fechaVencimiento());
-        documento.actualizarEstado();
-
-        //REGISTRAMOS EL DOCUMENTO DEL CONDUCTOR
-        Documento actualizado = documentosConductorRepository.saveAndFlush(documento);
-        //ELIMINAMOS EL DOCUMENTO
-        if (rutaAnterior != null) {
-            archivoService.eliminarArchivo(rutaAnterior);
-        }
-        //ACTUALIZAMOS EL ESTADO DEL CONDUCTOR
-        actualizarEstadoConductor(conductor);
-        //DEVOLVEMOS LA INFORMACION DEL DOCUMENTO
-        return entityToResponse(actualizado);
-    }
-
-    @Transactional
-    private DocumentoDTOResponse actualizarDocumentoCamion(Long idCamion, Long idDocumento, DocumentoDTORequest request, MultipartFile archivo) {
-        //OBTENEMOS AL CAMION
-        Camion camion = obtenerCamion(idCamion);
-        //OBTENEMOS EL DOCUMENTO DEL CAMION
-        DocumentoCamion documento = obtenerDocumentoCamion(idCamion, idDocumento);
-
-        //GUARDAMOS LA RUTA ANTERIOR
-        String rutaAnterior = null;
-        if (archivo != null && !archivo.isEmpty()) {
-            rutaAnterior = documento.getRutaArchivo();
-            //REGISTRAMOS EL DOCUMENTO NUEVO
-            documento.setRutaArchivo(archivoService.subirDocumento(archivo,"camion"));
-        }
-        //ACTUALIZAMOS LOS DATOS DEL DOCUMENTO
-        documento.setNombre(request.nombre().trim());
-        documento.setFechaEmision(request.fechaEmision());
-        documento.setFechaVencimiento(request.fechaVencimiento());
-        documento.actualizarEstado();
-        //GUARDAMOS LOS CAMBIOS EN LA DB
-        Documento actualizado = documentosCamionRepository.saveAndFlush(documento);
-        //ELIMINAMOS EL DOCUMENTO ANTERIOR
-        if (rutaAnterior != null) {
-            archivoService.eliminarArchivo(rutaAnterior);
-        }
-        //ACTUALIZAMOS EL ESTADO DEL CAMION
-        actualizarEstadoCamion(camion);
-        //DEVOLVEMOS LOS DATOS DEL DOCUMENTO NUEVO
-        return entityToResponse(actualizado);
-    }
-
-    @Override
-    public void eliminar(Long idEntidad, Long idDocumento, RolDocumento rolDocumento) {
-        switch (rolDocumento) {
-            case RolDocumento.CAMION -> eliminarDocumentoCamion(idEntidad, idDocumento);
-            case RolDocumento.CONDUCTOR -> eliminarDocumentoConductor(idEntidad, idDocumento);
-            default -> throw new BadRequestException("Rol no válido");
-        }
-    }
-
-    @Transactional
-    private void eliminarDocumentoConductor(Long idEntidad, Long idDocumento) {
-        //OBTENEMOS LOS ATRIBUTOS PRINCIPALES
-        Conductor conductor = obtenerConductor(idEntidad);
-        DocumentoConductor documento = obtenerDocumentoConductor(idEntidad, idDocumento);
-        String rutaArchivo = documento.getRutaArchivo();
-        //ELIMINAMOS EL ARCHIVO DEL DB
-        documentosConductorRepository.delete(documento);
-        documentosConductorRepository.flush();
-        //ELIMINAMOS EL ARCHIVO DE LA NUBE
-        archivoService.eliminarArchivo(rutaArchivo);
-        //ACTUALIZAMOS EL ESTADO DEL CONDUCTOR
-        actualizarEstadoConductor(conductor);
-    }
-
-    @Transactional
-    private void eliminarDocumentoCamion(Long idCamion, Long idDocumento){
-        //OBTENEMOS LOS ATRIBUTOS PRINCIPALES
-        Camion camion = obtenerCamion(idCamion);
-        DocumentoCamion documento = obtenerDocumentoCamion(idCamion, idDocumento);
-        String rutaArchivo = documento.getRutaArchivo();
-        //ELIMINAMOS EL ARCHIVO DEL DB
-        documentosCamionRepository.delete(documento);
-        documentosCamionRepository.flush();
-        //ELIMINAMOS EL ARCHIVO DE LA NUBE
-        archivoService.eliminarArchivo(rutaArchivo);
-        //ACTUALIZAMOS EL ESTADO DEL CAMION
-        actualizarEstadoCamion(camion);
-    }
-
-    @Transactional
-    private DocumentoDTOResponse registrarDocumentoConductor(Long id, DocumentoDTORequest request, TipoDocumento tipoDocumento, MultipartFile archivo) {
-        Conductor conductor = obtenerConductor(id);
-        validarTipoDocumentoUnicoConductor(id, tipoDocumento.getIdTipoDocumento());
-        String rutaArchivo = archivoService.subirDocumento(archivo,"conductor");
-        //CREAMOS EL DOCUMENTO CONDUCTOR
-        DocumentoConductor documentoConductor = new DocumentoConductor(
-                request.nombre().trim(),
-                tipoDocumento,
-                rutaArchivo,
-                request.fechaEmision(),
-                request.fechaVencimiento(),
-                conductor
-        );
-        Documento guardadoConductor = documentosConductorRepository.saveAndFlush(documentoConductor);
-        actualizarEstadoConductor(conductor);
-        return entityToResponse(guardadoConductor);
-    }
-
-    @Transactional
-    private DocumentoDTOResponse registrarDocumentoCamion(Long id,DocumentoDTORequest request,TipoDocumento tipoDocumento,MultipartFile archivo){
-        Camion camion = obtenerCamion(id);
-        validarTipoDocumentoUnicoCamion(id, tipoDocumento.getIdTipoDocumento());
-        String rutaArchivo = archivoService.subirDocumento(archivo,"camion");
-        //CREAMOS EL DOCUMENTO CAMION
-        DocumentoCamion documentoCamion = new DocumentoCamion(
-                request.nombre().trim(),
-                tipoDocumento,
-                rutaArchivo,
-                request.fechaEmision(),
-                request.fechaVencimiento(),
-                camion
-        );
-        Documento guardadoCamion = documentosCamionRepository.saveAndFlush(documentoCamion);
-        actualizarEstadoCamion(camion);
-        return entityToResponse(guardadoCamion);
-    }
-
-    @Transactional(readOnly = true)
-    private Camion obtenerCamion(Long idCamion) {
-        return camionRepository.findById(idCamion)
-                .filter(camion -> Boolean.TRUE.equals(camion.getActivo()))
-                .orElseThrow(() -> new NotFoundException(
-                        "Camión con ID: " + idCamion + " no encontrado"
-                ));
-    }
-
-    @Transactional(readOnly = true)
-    private Conductor obtenerConductor(Long idConductor){
-        return conductorRepository.findById(idConductor)
-                .orElseThrow(() -> new NotFoundException(
-                        "Conductor con ID: " + idConductor + " no encontrado"
-                ));
-    }
-
-    @Transactional(readOnly = true)
-    private TipoDocumento obtenerTipoDocumento(Long idTipoDocumentoCamion) {
-        return tipoDocumentoRepository.findById(idTipoDocumentoCamion)
-                .orElseThrow(() -> new NotFoundException(
-                        "Tipo de documento de camión con ID: " + idTipoDocumentoCamion + " no encontrado"
-                ));
-    }
-
-    @Transactional(readOnly = true)
-    private DocumentoCamion obtenerDocumentoCamion(Long idCamion, Long idDocumento) {
-        return documentosCamionRepository.findByIdAndCamionId(idDocumento, idCamion)
-                .orElseThrow(() -> new NotFoundException(
-                        "Documento con ID: " + idDocumento + " no encontrado para el camión " + idCamion
-                ));
-    }
-
-    @Transactional(readOnly = true)
-    private DocumentoConductor obtenerDocumentoConductor(Long idConductor, Long idDocumento) {
-        return documentosConductorRepository.findByIdAndConductorId(idDocumento, idConductor)
-                .orElseThrow(() -> new NotFoundException(
-                        "Documento con ID: " + idDocumento + " no encontrado para el conductor " + idConductor
-                ));
+        return tipo;
     }
 
     private void validarFechas(DocumentoDTORequest request) {
@@ -343,47 +93,111 @@ public class DocumentoService implements IDocumentoService {
         }
     }
 
-    private void validarTipoDocumentoUnicoCamion(Long idCamion, Long idTipoDocumento) {
-        List<DocumentoCamion> documentos = documentosCamionRepository.findByCamionId(idCamion).orElseThrow(()-> new NotFoundException("Camión con ID " + idCamion + " no encontrado"));
-        if (documentos.stream().anyMatch(doc -> doc.getTipoDocumento().getIdTipoDocumento().equals(idTipoDocumento))) {
-            throw new BadRequestException("El tipo de documento ya está registrado para este camión");
-        }
+    @Override
+    @Transactional(readOnly = true)
+    public List<DocumentoDTOResponse> listarDocumentos(Long id, RolDocumento rol) {
+        //Actualizamos el estado de habilitacion antes de listar
+        this.actualizarEstadosDocumentos(id,rol);
+        //Devolvemos la lista de documentos actualizada
+        return handler(rol).listar(id).stream().map(this::entityToResponse).toList();
     }
 
-    private void validarTipoDocumentoUnicoConductor(Long idConductor, Long idTipoDocumento) {
-        List<DocumentoConductor> documentos = documentosConductorRepository.findByConductorId(idConductor).orElseThrow(()-> new NotFoundException("Conductor con ID " + idConductor + " no encontrado"));
-        if (documentos.stream().anyMatch(doc -> doc.getTipoDocumento().getIdTipoDocumento().equals(idTipoDocumento))) {
-            throw new BadRequestException("El tipo de documento ya está registrado para este conductor");
-        }
+    @Transactional(readOnly = true)
+    public String obtenerArchivoURL(Long idEntidad, Long idDocumento, RolDocumento rol) {
+        Documento documento = handler(rol).obtener(idEntidad, idDocumento);
+        return archivoService.obtenerUrlTemporal(documento.getRutaArchivo()).toString();
     }
 
+    @Override
     @Transactional
-    private void actualizarEstadoCamion(Camion camion) {
-        Set<TipoDocumento> tipoDocumentosCamion = tipoDocumentoRepository.findByRol(RolDocumento.CAMION);
-        List<DocumentoCamion> documentos = documentosCamionRepository.findByCamionId(camion.getId()).orElseThrow(()-> new NotFoundException("Camión con ID " + camion.getId() + " no encontrado"));
+    public DocumentoDTOResponse registrarDocumento(Long id, DocumentoDTORequest request,
+                                                   MultipartFile archivo, RolDocumento rol) {
+        IDocumentoHandler h = handler(rol);
+        TipoDocumento tipo = validarSolicitud(request, rol);
+        if (archivo == null || archivo.isEmpty()) {
+            throw new BadRequestException("El archivo es obligatorio");
+        }
+        h.validarTipoUnico(id, tipo.getIdTipoDocumento());
 
-        camion.setEstado(isHabilitado(tipoDocumentosCamion, documentos) ? EstadoCamion.HABILITADO : EstadoCamion.INHABILITADO);
-        camionRepository.save(camion);
+        String ruta = archivoService.subirDocumento(archivo, h.carpeta());
+        Documento guardado = h.crear(id, request, tipo, ruta);
+        h.actualizarHabilitacion(id);
+        return entityToResponse(guardado);
     }
 
+    @Override
     @Transactional
-    private void actualizarEstadoConductor(Conductor conductor){
-        Set<TipoDocumento> tipoDocumentosConductor = tipoDocumentoRepository.findByRol(RolDocumento.CONDUCTOR);
-        List<DocumentoConductor> documentos = documentosConductorRepository.findByConductorId(conductor.getId()).orElseThrow(()-> new NotFoundException("Conductor con ID " + conductor.getId() + " no encontrado"));
-        conductor.setEstado(isHabilitado(tipoDocumentosConductor, documentos));
-        conductorRepository.save(conductor);
+    public DocumentoDTOResponse actualizarDocumento(Long idEntidad, Long idDocumento,
+                                                    DocumentoDTORequest request,
+                                                    MultipartFile archivo, RolDocumento rol) {
+        IDocumentoHandler h = handler(rol);
+        validarSolicitud(request, rol);
+        Documento documento = h.obtener(idEntidad, idDocumento);
+
+        String rutaAnterior = null;
+        if (archivo != null && !archivo.isEmpty()) {
+            rutaAnterior = documento.getRutaArchivo();
+            documento.setRutaArchivo(archivoService.subirDocumento(archivo, h.carpeta()));
+        }
+        documento.setNombre(request.nombre().trim());
+        documento.setFechaEmision(request.fechaEmision());
+        documento.setFechaVencimiento(request.fechaVencimiento());
+        documento.actualizarEstado();
+
+        Documento actualizado = h.guardar(documento);
+        h.actualizarHabilitacion(idEntidad);
+        if (rutaAnterior != null) archivoService.eliminarArchivo(rutaAnterior);  // al final
+        return entityToResponse(actualizado);
     }
 
-    private boolean isHabilitado(Set<TipoDocumento> tipoDocumento, List<? extends Documento> documentos) {
-        LocalDate fechaConsulta = LocalDate.now();
+    @Override
+    @Transactional
+    public void eliminar(Long idEntidad, Long idDocumento, RolDocumento rol) {
+        IDocumentoHandler h = handler(rol);
+        Documento documento = h.obtener(idEntidad, idDocumento);
+        String ruta = documento.getRutaArchivo();
 
-        return !tipoDocumento.isEmpty() && tipoDocumento.stream().allMatch(tipo ->
-                documentos.stream().anyMatch(documento ->
-                        documento.getTipoDocumento().getIdTipoDocumento()
-                                    .equals(tipo.getIdTipoDocumento())
-                                && documento.getFechaVencimiento() != null
-                                && !documento.getFechaVencimiento().isBefore(fechaConsulta)
-                )
-        );
+        h.eliminar(documento);
+        h.actualizarHabilitacion(idEntidad);
+        archivoService.eliminarArchivo(ruta);                                     // al final
     }
+
+    @Override
+    @Transactional
+    public void actualizarEstadosDocumentos(Long idEntidad, RolDocumento rol) {
+        IDocumentoHandler h = handler(rol);
+
+        // 1. Recalcula el estado de cada documento (VIGENTE / POR VENCER / VENCIDO)
+        h.listar(idEntidad).forEach(Documento::actualizarEstado);
+
+        // 2. Recalcula si el camión o conductor sigue habilitado
+        h.actualizarHabilitacion(idEntidad);
+    }
+
+    @Override
+    public ResultadoActualizacion actualizarTodosLosEstados() {
+        int procesados = 0;
+        int errores = 0;
+
+        for (IDocumentoHandler h : handlers.values()) {
+            for (Long id : h.listarIdsEntidades()) {
+                try {
+                    transactionTemplate.executeWithoutResult(status -> actualizarEstadosEntidad(h, id));
+                    procesados++;
+                } catch (Exception e) {
+                    errores++;
+                    log.error("No se pudo actualizar {} con ID {}", h.rol(), id, e);
+                }
+            }
+        }
+        log.info("Actualización de estados: {} procesados, {} con error", procesados, errores);
+        return new ResultadoActualizacion(procesados, errores);
+    }
+
+    // Lógica compartida con el metodo por ID
+    private void actualizarEstadosEntidad(IDocumentoHandler h, Long idEntidad) {
+        h.listar(idEntidad).forEach(Documento::actualizarEstado);
+        h.actualizarHabilitacion(idEntidad);
+    }
+
 }
