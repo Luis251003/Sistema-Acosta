@@ -10,6 +10,6 @@ public record CamionDTOResponse(
         String capacidad,
         String numeroTuce,
         TipoVehiculo tipoVehiculo,
-        Boolean estado
+        boolean habilitado
 ) {
 }

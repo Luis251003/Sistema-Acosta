@@ -6,15 +6,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Objects;
 
-@Entity(name = "tb_conductores")
+@Entity
 @Getter
 @Setter
 @NoArgsConstructor
+@Table(name = "tb_conductores")
 public class Conductor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,7 +31,7 @@ public class Conductor {
     private TipoConductor tipoConductor;
 
     @Column(nullable = false)
-    private Boolean estado = false;
+    private Boolean habilitado = false;
 
     @Column(nullable = false)
     private Boolean activo = true;
@@ -63,20 +62,6 @@ public class Conductor {
     @PreUpdate
     private void configurarAntesDeActualizar() {
         this.updatedAt = LocalDateTime.now();
-    }
-
-    //METODO PARA EVALUAR ESTADO DEL CONDUCTOR
-    public Boolean evaluarEstadoConductor(List<TipoDocumento> tiposObligatorios,
-                                          List<Documento> documentosConductor,
-                                          LocalDate fechaConsulta){
-        return tiposObligatorios.stream().allMatch(tipo ->
-                documentosConductor.stream().anyMatch(documento ->
-                        documento.getTipoDocumento().getRol().equals(tipo.getRol())
-                                && documento.getFechaVencimiento() != null
-                                && !documento.getFechaVencimiento()
-                                .isBefore(fechaConsulta)
-                )
-        );
     }
 
     @Override

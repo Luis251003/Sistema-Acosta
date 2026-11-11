@@ -13,7 +13,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import tools.jackson.core.exc.StreamReadException;
 import tools.jackson.databind.DatabindException;
@@ -68,7 +67,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
 
         //Obtenemos al usuario
-        User user = (User)authResult.getPrincipal();
+        UsuarioPrincipal user = (UsuarioPrincipal)authResult.getPrincipal();
         //Validamos que el usuario exista
         if(user==null)throw new RuntimeException("Error de autenticación");
         //Obtenemos el correo
@@ -83,6 +82,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         String token = Jwts
                 .builder()
                 .subject(email)
+                .claim("id",user.getId())
                 .claim("authorities", roleNames)
                 .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .issuedAt(new Date())

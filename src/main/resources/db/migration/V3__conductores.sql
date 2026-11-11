@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS tb_conductores (
     brevete VARCHAR(10) NOT NULL,
     foto_url VARCHAR(500),
     tipo_conductor VARCHAR(20) NOT NULL,
-    estado BOOLEAN NOT NULL DEFAULT FALSE,
+    habilitado BOOLEAN NOT NULL DEFAULT FALSE,
     activo BOOLEAN NOT NULL DEFAULT TRUE,
     created_at DATETIME(6) NOT NULL,
     updated_at DATETIME(6) NOT NULL,

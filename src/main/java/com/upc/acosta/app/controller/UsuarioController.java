@@ -1,7 +1,7 @@
 package com.upc.acosta.app.controller;
 
 import com.upc.acosta.app.dto.UsuarioDTOResponse;
-import com.upc.acosta.app.service.IUsuarioService;
+import com.upc.acosta.app.service.interfaces.IUsuarioService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

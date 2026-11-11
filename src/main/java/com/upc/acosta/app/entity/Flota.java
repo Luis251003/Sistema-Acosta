@@ -8,16 +8,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
-@Table(
-        name = "tb_flotas",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_tb_flota_operacion_conductor",
-                columnNames = {"id_operacion", "id_conductor"}
-        )
-)
+@Table(name = "tb_flotas")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -28,24 +24,12 @@ public class Flota {
     private Long id;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_operacion", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_operacion", nullable = false, unique = true)
     private Operacion operacion;
 
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_conductor", nullable = false)
-    private Conductor conductor;
-
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_camion", nullable = false)
-    private Camion camion;
-
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(name = "rol_flota", nullable = false, length = 20)
-    private RolFlota rol;
+    @OneToMany(mappedBy = "flota", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FlotaDetalle> detalles = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -53,11 +37,12 @@ public class Flota {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    public Flota(Operacion operacion, Conductor conductor, Camion camion, RolFlota rol){
+    public Flota(Operacion operacion){
         this.operacion = operacion;
-        this.conductor = conductor;
-        this.camion = camion;
-        this.rol = rol;
+    }
+
+    public void agregarDetalle(Conductor conductor, Camion camion, RolFlota rol) {
+        detalles.add(new FlotaDetalle(this, conductor, camion, rol));
     }
 
     @PrePersist

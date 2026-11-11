@@ -2,9 +2,10 @@ package com.upc.acosta.app.service;
 
 import com.upc.acosta.app.entity.Usuario;
 import com.upc.acosta.app.repository.IUsuarioRepository;
+import com.upc.acosta.app.security.UsuarioPrincipal;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -25,7 +26,7 @@ public class UserDetailsServiceJPA implements UserDetailsService {
 
     @Transactional(readOnly = true)
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {
         //Obtenemos el usuario X correo
         Usuario user = repository.findByEmail(username).orElseThrow(()-> new RuntimeException("Error al iniciar sesión"));
         //Obtenemos los roles del usuario
@@ -34,14 +35,6 @@ public class UserDetailsServiceJPA implements UserDetailsService {
                 .stream()
                 .map(rol -> new SimpleGrantedAuthority("ROLE_" + rol.getNombre()))
                 .collect(Collectors.toList());
-        return new User(
-                user.getEmail(),
-                user.getPassword(),
-                user.isEnabled(),
-                true,
-                true,
-                true,
-                authorities
-        );
+        return new UsuarioPrincipal(user.getId(), user.getEmail(), user.getPassword(), authorities);
     }
 }

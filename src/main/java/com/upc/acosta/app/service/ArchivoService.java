@@ -1,6 +1,7 @@
 package com.upc.acosta.app.service;
 
 import com.upc.acosta.app.error.BadRequestException;
+import com.upc.acosta.app.service.interfaces.IArchivoService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,7 +13,6 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
-import java.io.IOException;
 import java.net.URL;
 import java.time.Duration;
 import java.util.Objects;

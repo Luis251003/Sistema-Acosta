@@ -45,14 +45,16 @@ public class JwtValidationFilter extends BasicAuthenticationFilter {
         try{
             Claims claims = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload();
             String email = claims.getSubject();
+            Long id = claims.get("id",Long.class);
             List<String> roles = claims.get("authorities", List.class);
 
             Collection<? extends GrantedAuthority> authorities = roles.stream()
                     .map(SimpleGrantedAuthority::new)
                     .toList();
 
-            UsernamePasswordAuthenticationToken authenticationToken= new UsernamePasswordAuthenticationToken(email,null,authorities);
-            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            UsuarioPrincipal principal = new UsuarioPrincipal(id, email, null, authorities);
+            UsernamePasswordAuthenticationToken auth= new UsernamePasswordAuthenticationToken(principal,null,authorities);
+            SecurityContextHolder.getContext().setAuthentication(auth);
 
             //4. Renovar TOKEN si esta proximo a expirar
             Date expiration = claims.getExpiration();

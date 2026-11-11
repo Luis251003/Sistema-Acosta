@@ -10,7 +10,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@Entity(name = "tb_eventos_operacion")
+@Entity
+@Table(name = "tb_eventos_operacion")
 public class EventoOperacion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

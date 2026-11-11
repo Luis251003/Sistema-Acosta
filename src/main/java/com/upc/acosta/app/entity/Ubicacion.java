@@ -26,7 +26,7 @@ public class Ubicacion {
     @Column(name = "id_ubicacion")
     private Long id;
 
-    @Column(name = "direccion", nullable = false, length = 300)
+    @Column(nullable = false, length = 300)
     private String direccion;
 
     @Column(nullable = false, precision = 10, scale = 7)
@@ -36,10 +36,12 @@ public class Ubicacion {
     private BigDecimal longitud;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "cod_ubigeo", nullable = false)
-    private Ubigeo ubigeo;
+    @JoinColumn(name = "id_ubigeo_distrito", nullable = false)
+    private UbigeoDistrito ubigeo;
 
-    public Ubicacion(Ubigeo ubigeo, String direccion) {
+    public Ubicacion(UbigeoDistrito ubigeo, String direccion, BigDecimal latitud, BigDecimal longitud) {
+        this.latitud = latitud;
+        this.longitud = longitud;
         this.ubigeo = ubigeo;
         this.direccion = direccion;
     }

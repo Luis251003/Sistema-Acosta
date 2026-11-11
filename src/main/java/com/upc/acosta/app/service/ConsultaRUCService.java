@@ -4,6 +4,7 @@ import com.upc.acosta.app.dto.RucDTOResponse;
 import com.upc.acosta.app.error.BadRequestException;
 import com.upc.acosta.app.error.ExternalServiceException;
 import com.upc.acosta.app.error.NotFoundException;
+import com.upc.acosta.app.service.interfaces.IRucService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
@@ -13,7 +14,7 @@ import org.springframework.web.client.RestClientException;
 import static com.upc.acosta.app.security.TokenJwtConfig.*;
 
 @Service
-public class ConsultaRUCService implements IRucService{
+public class ConsultaRUCService implements IRucService {
 
     private final RestClient restClient;
     private final String KEY;

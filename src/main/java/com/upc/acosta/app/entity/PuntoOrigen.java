@@ -5,12 +5,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
-@Entity(name = "tb_puntos_origen")
+@Entity
 @Getter
 @Setter
 @NoArgsConstructor
+@Table(name = "tb_puntos_origen")
 public class PuntoOrigen {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,6 +22,9 @@ public class PuntoOrigen {
 
     @Column(name = "nombre", nullable = false,unique = true, length = 50)
     private String nombre;
+
+    @OneToMany(mappedBy = "puntoOrigen", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PuntoOrigenAlias> alias = new ArrayList<>();
 
     public PuntoOrigen(String nombre) {
         this.nombre = nombre;
