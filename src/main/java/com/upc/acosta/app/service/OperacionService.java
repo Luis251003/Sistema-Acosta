@@ -47,16 +47,21 @@ public class OperacionService implements IOperacionService {
     }
 
     private OperacionListarDTOResponse entityToListarResponse(Operacion bean){
-        FlotaDetalle detallePrincipal = bean.getFlota().getDetalles().getFirst();
-        Empleado conductor = detallePrincipal.getConductor().getEmpleado();
+        Flota flota = bean.getFlota();
+        FlotaDetalle detallePrincipal = flota == null ? null : flota.getDetalles().getFirst();
+        Empleado conductor = detallePrincipal == null || detallePrincipal.getConductor() == null
+                ? null
+                : detallePrincipal.getConductor().getEmpleado();
 
         return new OperacionListarDTOResponse(
                 bean.getId(),
                 bean.getCodigoOperacion().getCodigo(),
                 clienteService.entityToResponse(bean.getCliente()).razonSocial(),
                 bean.getFechaRecojoProgramado(),
-                conductor.getNombre() + " " + conductor.getApellido(),
-                detallePrincipal.getCamion().getPlaca(),
+                conductor == null ? null : conductor.getNombre() + " " + conductor.getApellido(),
+                detallePrincipal == null || detallePrincipal.getCamion() == null
+                        ? null
+                        : detallePrincipal.getCamion().getPlaca(),
                 bean.getEstado()
         );
     }
