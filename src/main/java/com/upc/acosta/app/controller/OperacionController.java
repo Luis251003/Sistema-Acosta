@@ -6,6 +6,7 @@ import com.upc.acosta.app.entity.tipos.TipoVehiculo;
 import com.upc.acosta.app.security.UsuarioPrincipal;
 import com.upc.acosta.app.service.interfaces.ICodigoOperacionService;
 import com.upc.acosta.app.service.interfaces.IOperacionService;
+import com.upc.acosta.app.service.interfaces.IPuntoOrigenService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,7 @@ public class OperacionController {
 
     private final ICodigoOperacionService codigoService;
     private final IOperacionService operacionService;
+    private final IPuntoOrigenService puntoOrigenService;
 
     @GetMapping("/codigo-nuevo")
     public ResponseEntity<?> codigoNuevo(@AuthenticationPrincipal UsuarioPrincipal user) {
